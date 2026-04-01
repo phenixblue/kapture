@@ -8,7 +8,8 @@
         "true": true,
         "goreleaser": true,
         "git rev-parse": true,
-        "git tag": true
+        "git tag": true,
+        "git ls-tree": true
     },
     "makefile.configureOnOpen": false
 }

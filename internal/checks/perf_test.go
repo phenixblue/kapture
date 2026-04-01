@@ -11,13 +11,13 @@ import (
 // the given synthetic scale. These are intentionally conservative to avoid
 // flakiness on slow CI runners while still catching O(N²) regressions.
 var latencyBudgets = map[string]time.Duration{
-	"FilterRegistry/500checks":        10 * time.Millisecond,
-	"FilterFindings/1000findings":      10 * time.Millisecond,
-	"FilterFindings/5000findings":      50 * time.Millisecond,
-	"ApplyWaivers/1000findings":        10 * time.Millisecond,
-	"ApplyWaivers/5000findings":        50 * time.Millisecond,
+	"FilterRegistry/500checks":              10 * time.Millisecond,
+	"FilterFindings/1000findings":           10 * time.Millisecond,
+	"FilterFindings/5000findings":           50 * time.Millisecond,
+	"ApplyWaivers/1000findings":             10 * time.Millisecond,
+	"ApplyWaivers/5000findings":             50 * time.Millisecond,
 	"ApplyBaselineAssessments/1000findings": 10 * time.Millisecond,
-	"Summarize/5000findings":           10 * time.Millisecond,
+	"Summarize/5000findings":                10 * time.Millisecond,
 }
 
 // syntheticRegistry builds N checks evenly spread across 3 categories.
