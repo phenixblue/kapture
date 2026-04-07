@@ -696,3 +696,14 @@ test_version_patch_below if {
 test_version_major_below if {
 	not data.kvirtbp.version_gte("2.9.9", "3.0.0")
 }
+
+# Pre-release suffix (e.g. -rc1) must not cause the check to fail when the
+# numeric version satisfies the minimum.
+test_version_prerelease_pass if {
+	data.kvirtbp.version_gte("3.6.0-rc1", "3.3.0")
+}
+
+# Pre-release patch that is numerically below minimum should still fail.
+test_version_prerelease_fail if {
+	not data.kvirtbp.version_gte("3.2.9-rc1", "3.3.0")
+}

@@ -569,14 +569,22 @@ pvc_block_findings := [] if {
 # ---------------------------------------------------------------------------
 
 # version_gte(actual, minimum) is true when actual >= minimum.
+# Pre-release suffixes (e.g. "-rc1", "-beta") are stripped from each
+# component before numeric comparison so that "3.6.0-rc1" >= "3.3.0".
 version_gte(actual, minimum) if {
 	ap := split(actual, ".")
 	mp := split(minimum, ".")
 	count(ap) == 3
 	count(mp) == 3
-	# Convert each component to an integer tuple for numeric comparison.
-	[to_number(ap[0]), to_number(ap[1]), to_number(ap[2])] >=
-		[to_number(mp[0]), to_number(mp[1]), to_number(mp[2])]
+	# Strip any pre-release tag from each component (e.g. "0-rc1" -> "0").
+	a0 := split(ap[0], "-")[0]
+	a1 := split(ap[1], "-")[0]
+	a2 := split(ap[2], "-")[0]
+	m0 := split(mp[0], "-")[0]
+	m1 := split(mp[1], "-")[0]
+	m2 := split(mp[2], "-")[0]
+	[to_number(a0), to_number(a1), to_number(a2)] >=
+		[to_number(m0), to_number(m1), to_number(m2)]
 }
 
 # ---------------------------------------------------------------------------
