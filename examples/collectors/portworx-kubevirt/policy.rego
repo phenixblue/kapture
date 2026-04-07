@@ -55,6 +55,9 @@
 #   prod-px-kubevirt-storageprofile-block — all PX StorageProfiles include Block+RWX
 #   prod-px-kubevirt-pvc-rwx            — KubeVirt PVCs use ReadWriteMany
 #   prod-px-kubevirt-pvc-block          — KubeVirt PVCs use volumeMode Block
+#   prod-px-kubevirt-px-version         — Portworx Enterprise >= 3.3.0
+#   prod-px-kubevirt-operator-version   — Portworx Operator >= 25.2.1
+#   prod-px-kubevirt-stork-version      — Portworx Stork >= 25.2.0
 #
 # References:
 #   https://docs.portworx.com/portworx-enterprise/provision-storage/kubevirt-vms/
@@ -558,6 +561,249 @@ pvc_block_findings := [] if {
 }
 
 # ---------------------------------------------------------------------------
+# Version comparison helper
+#
+# Portworx version strings are "MAJOR.MINOR.PATCH" (digits only, no leading
+# "v"). Compare by zero-padding each numeric component to 6 chars so that
+# string ordering matches numeric ordering (e.g. "3.10.0" > "3.9.0").
+# ---------------------------------------------------------------------------
+
+# version_gte(actual, minimum) is true when actual >= minimum.
+version_gte(actual, minimum) if {
+	ap := split(actual, ".")
+	mp := split(minimum, ".")
+	count(ap) == 3
+	count(mp) == 3
+	# Convert each component to an integer tuple for numeric comparison.
+	[to_number(ap[0]), to_number(ap[1]), to_number(ap[2])] >=
+		[to_number(mp[0]), to_number(mp[1]), to_number(mp[2])]
+}
+
+# ---------------------------------------------------------------------------
+# Check 10: Portworx Enterprise version >= 3.3.0
+#
+# Prerequisite from:
+#   https://docs.portworx.com/portworx-enterprise/provision-storage/kubevirt-vms/
+#       manage-kubevirt-vms-rwx-block/openshift#prerequisites
+# ---------------------------------------------------------------------------
+
+px_min_version := "3.3.0"
+
+# Clusters that do not meet the minimum PX version.
+clusters_px_version_fail := {sprintf("%s/%s (found: %s, required: >= %s)", [c.namespace, c.name, c.version, px_min_version]) |
+	some c in px_storage_clusters
+	c.version != ""
+	not version_gte(c.version, px_min_version)
+}
+
+# Clusters with unparseable or missing version string.
+clusters_px_version_unknown := {sprintf("%s/%s", [c.namespace, c.name]) |
+	some c in px_storage_clusters
+	c.version == ""
+}
+
+px_version_findings := [{
+	"checkId":    "prod-px-kubevirt-px-version",
+	"title":      "Portworx Enterprise Minimum Version",
+	"category":   "production-readiness",
+	"severity":   "info",
+	"pass":        true,
+	"reasonCode": "prod.px.kubevirt.px_version.ok",
+	"message":    sprintf("all StorageCluster(s) meet minimum Portworx Enterprise version %s", [px_min_version]),
+}] if {
+	collector_present
+	count(px_storage_clusters) > 0
+	count(clusters_px_version_fail) == 0
+	count(clusters_px_version_unknown) == 0
+}
+
+px_version_findings := [{
+	"checkId":     "prod-px-kubevirt-px-version",
+	"title":       "Portworx Enterprise Minimum Version",
+	"category":    "production-readiness",
+	"severity":    "critical",
+	"pass":         false,
+	"reasonCode":  "prod.px.kubevirt.px_version.too_old",
+	"message":     sprintf("%d StorageCluster(s) below minimum Portworx Enterprise version %s: %v", [count(clusters_px_version_fail), px_min_version, clusters_px_version_fail]),
+	"evidence":    {"violating": sprintf("%v", [clusters_px_version_fail])},
+	"remediation": sprintf("Upgrade Portworx Enterprise to %s or later. See https://docs.portworx.com/portworx-enterprise/provision-storage/kubevirt-vms/manage-kubevirt-vms-rwx-block/openshift#prerequisites", [px_min_version]),
+}] if {
+	collector_present
+	count(px_storage_clusters) > 0
+	count(clusters_px_version_fail) > 0
+}
+
+px_version_findings := [{
+	"checkId":    "prod-px-kubevirt-px-version",
+	"title":      "Portworx Enterprise Minimum Version",
+	"category":   "production-readiness",
+	"severity":   "warning",
+	"pass":        false,
+	"reasonCode": "prod.px.kubevirt.px_version.unknown",
+	"message":    sprintf("Portworx Enterprise version unknown for %d StorageCluster(s): %v", [count(clusters_px_version_unknown), clusters_px_version_unknown]),
+	"evidence":   {"unknown": sprintf("%v", [clusters_px_version_unknown])},
+	"remediation": "Ensure the StorageCluster status.version field is populated. The cluster may still be initialising.",
+}] if {
+	collector_present
+	count(px_storage_clusters) > 0
+	count(clusters_px_version_fail) == 0
+	count(clusters_px_version_unknown) > 0
+}
+
+px_version_findings := [] if { not collector_present }
+px_version_findings := [] if {
+	collector_present
+	count(px_storage_clusters) == 0
+}
+
+# ---------------------------------------------------------------------------
+# Check 11: Portworx Operator version >= 25.2.1
+#
+# Prerequisite from:
+#   https://docs.portworx.com/portworx-enterprise/provision-storage/kubevirt-vms/
+#       manage-kubevirt-vms-rwx-block/openshift#prerequisites
+# ---------------------------------------------------------------------------
+
+operator_min_version := "25.2.1"
+
+clusters_operator_version_fail := {sprintf("%s/%s (found: %s, required: >= %s)", [c.namespace, c.name, c.operatorVersion, operator_min_version]) |
+	some c in px_storage_clusters
+	c.operatorVersion != ""
+	not version_gte(c.operatorVersion, operator_min_version)
+}
+
+clusters_operator_version_unknown := {sprintf("%s/%s", [c.namespace, c.name]) |
+	some c in px_storage_clusters
+	c.operatorVersion == ""
+}
+
+operator_version_findings := [{
+	"checkId":    "prod-px-kubevirt-operator-version",
+	"title":      "Portworx Operator Minimum Version",
+	"category":   "production-readiness",
+	"severity":   "info",
+	"pass":        true,
+	"reasonCode": "prod.px.kubevirt.operator_version.ok",
+	"message":    sprintf("all StorageCluster(s) meet minimum Portworx Operator version %s", [operator_min_version]),
+}] if {
+	collector_present
+	count(px_storage_clusters) > 0
+	count(clusters_operator_version_fail) == 0
+	count(clusters_operator_version_unknown) == 0
+}
+
+operator_version_findings := [{
+	"checkId":     "prod-px-kubevirt-operator-version",
+	"title":       "Portworx Operator Minimum Version",
+	"category":    "production-readiness",
+	"severity":    "critical",
+	"pass":         false,
+	"reasonCode":  "prod.px.kubevirt.operator_version.too_old",
+	"message":     sprintf("%d StorageCluster(s) below minimum Portworx Operator version %s: %v", [count(clusters_operator_version_fail), operator_min_version, clusters_operator_version_fail]),
+	"evidence":    {"violating": sprintf("%v", [clusters_operator_version_fail])},
+	"remediation": sprintf("Upgrade the Portworx Operator to %s or later. See https://docs.portworx.com/portworx-enterprise/provision-storage/kubevirt-vms/manage-kubevirt-vms-rwx-block/openshift#prerequisites", [operator_min_version]),
+}] if {
+	collector_present
+	count(px_storage_clusters) > 0
+	count(clusters_operator_version_fail) > 0
+}
+
+operator_version_findings := [{
+	"checkId":    "prod-px-kubevirt-operator-version",
+	"title":      "Portworx Operator Minimum Version",
+	"category":   "production-readiness",
+	"severity":   "warning",
+	"pass":        false,
+	"reasonCode": "prod.px.kubevirt.operator_version.unknown",
+	"message":    sprintf("Portworx Operator version unknown for %d StorageCluster(s): %v", [count(clusters_operator_version_unknown), clusters_operator_version_unknown]),
+	"evidence":   {"unknown": sprintf("%v", [clusters_operator_version_unknown])},
+	"remediation": "Ensure the StorageCluster status.operatorVersion field is populated. The cluster may still be initialising.",
+}] if {
+	collector_present
+	count(px_storage_clusters) > 0
+	count(clusters_operator_version_fail) == 0
+	count(clusters_operator_version_unknown) > 0
+}
+
+operator_version_findings := [] if { not collector_present }
+operator_version_findings := [] if {
+	collector_present
+	count(px_storage_clusters) == 0
+}
+
+# ---------------------------------------------------------------------------
+# Check 12: Portworx Stork version >= 25.2.0
+#
+# Prerequisite from:
+#   https://docs.portworx.com/portworx-enterprise/provision-storage/kubevirt-vms/
+#       manage-kubevirt-vms-rwx-block/openshift#prerequisites
+#
+# Stork is optional (spec.stork.enabled may be false). If no cluster has a
+# storkVersion populated this check is skipped (info, not a failure).
+# ---------------------------------------------------------------------------
+
+stork_min_version := "25.2.0"
+
+clusters_stork_version_fail := {sprintf("%s/%s (found: %s, required: >= %s)", [c.namespace, c.name, c.storkVersion, stork_min_version]) |
+	some c in px_storage_clusters
+	c.storkVersion != ""
+	not version_gte(c.storkVersion, stork_min_version)
+}
+
+stork_version_findings := [{
+	"checkId":    "prod-px-kubevirt-stork-version",
+	"title":      "Portworx Stork Minimum Version",
+	"category":   "production-readiness",
+	"severity":   "info",
+	"pass":        true,
+	"reasonCode": "prod.px.kubevirt.stork_version.ok",
+	"message":    sprintf("all StorageCluster(s) with Stork enabled meet minimum Stork version %s", [stork_min_version]),
+}] if {
+	collector_present
+	count(px_storage_clusters) > 0
+	# At least one cluster has stork configured.
+	count({c | some c in px_storage_clusters; c.storkVersion != ""}) > 0
+	count(clusters_stork_version_fail) == 0
+}
+
+stork_version_findings := [{
+	"checkId":     "prod-px-kubevirt-stork-version",
+	"title":       "Portworx Stork Minimum Version",
+	"category":    "production-readiness",
+	"severity":    "critical",
+	"pass":         false,
+	"reasonCode":  "prod.px.kubevirt.stork_version.too_old",
+	"message":     sprintf("%d StorageCluster(s) below minimum Stork version %s: %v", [count(clusters_stork_version_fail), stork_min_version, clusters_stork_version_fail]),
+	"evidence":    {"violating": sprintf("%v", [clusters_stork_version_fail])},
+	"remediation": sprintf("Upgrade Portworx Stork to %s or later. See https://docs.portworx.com/portworx-enterprise/provision-storage/kubevirt-vms/manage-kubevirt-vms-rwx-block/openshift#prerequisites", [stork_min_version]),
+}] if {
+	collector_present
+	count(px_storage_clusters) > 0
+	count(clusters_stork_version_fail) > 0
+}
+
+stork_version_findings := [{
+	"checkId":    "prod-px-kubevirt-stork-version",
+	"title":      "Portworx Stork Minimum Version",
+	"category":   "production-readiness",
+	"severity":   "info",
+	"pass":        true,
+	"reasonCode": "prod.px.kubevirt.stork_version.not_configured",
+	"message":    "no StorageCluster(s) have a Stork version configured; Stork is optional in this deployment",
+}] if {
+	collector_present
+	count(px_storage_clusters) > 0
+	count({c | some c in px_storage_clusters; c.storkVersion != ""}) == 0
+	count(clusters_stork_version_fail) == 0
+}
+
+stork_version_findings := [] if { not collector_present }
+stork_version_findings := [] if {
+	collector_present
+	count(px_storage_clusters) == 0
+}
+
+# ---------------------------------------------------------------------------
 # Entrypoint
 # ---------------------------------------------------------------------------
 
@@ -568,18 +814,27 @@ cluster_findings := array.concat(
 				array.concat(
 					array.concat(
 						array.concat(
-							array.concat(collector_findings, sc_exists_findings),
-							repl_findings,
+							array.concat(
+								array.concat(
+									array.concat(
+										array.concat(collector_findings, sc_exists_findings),
+										repl_findings,
+									),
+									binding_findings,
+								),
+								expansion_findings,
+							),
+							nodiscard_findings,
 						),
-						binding_findings,
+						storageprofile_findings,
 					),
-					expansion_findings,
+					pvc_rwx_findings,
 				),
-				nodiscard_findings,
+				pvc_block_findings,
 			),
-			storageprofile_findings,
+			px_version_findings,
 		),
-		pvc_rwx_findings,
+		operator_version_findings,
 	),
-	pvc_block_findings,
+	stork_version_findings,
 )

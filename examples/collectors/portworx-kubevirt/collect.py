@@ -77,13 +77,37 @@ for sp in sp_list.get('items', []):
     profiles.append({'name': sp['metadata']['name'], 'claimPropertySets': cps})
 
 # ── StorageClusters ────────────────────────────────────────────────────────────
+def _stork_version(sc):
+    # Stork version is embedded in spec.stork.spec.image, e.g.
+    #   openstorage/stork:25.2.0
+    # Fall back to status.desiredImages.stork when the spec image is absent
+    # (operator may replace the field with the resolved digest reference).
+    img = (
+        sc.get('spec', {})
+          .get('stork', {})
+          .get('spec', {})
+          .get('image', '')
+    )
+    if not img:
+        img = (
+            sc.get('status', {})
+              .get('desiredImages', {})
+              .get('stork', '')
+        )
+    # Extract the tag after the last colon; strip leading 'v' for uniform comparison.
+    if ':' in img:
+        tag = img.rsplit(':', 1)[-1]
+        return tag.lstrip('v')
+    return ''
+
 stc_list = get('/apis/core.libopenstorage.org/v1/storageclusters')
 clusters = [
     {
         'name':            s['metadata']['name'],
         'namespace':       s['metadata']['namespace'],
-        'version':         s.get('status', {}).get('version', ''),
-        'operatorVersion': s.get('status', {}).get('operatorVersion', ''),
+        'version':         s.get('status', {}).get('version', '').lstrip('v'),
+        'operatorVersion': s.get('status', {}).get('operatorVersion', '').lstrip('v'),
+        'storkVersion':    _stork_version(s),
     }
     for s in stc_list.get('items', [])
 ]

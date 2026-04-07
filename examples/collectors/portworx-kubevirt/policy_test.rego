@@ -50,6 +50,7 @@ input_compliant := {
 							"namespace":       "portworx",
 							"version":         "3.3.0",
 							"operatorVersion": "25.2.1",
+							"storkVersion":    "25.2.0",
 						},
 					],
 					"pvcs": [
@@ -477,4 +478,221 @@ test_compliant_all_pass if {
 	every f in findings {
 		f.pass == true
 	}
+}
+
+# ---------------------------------------------------------------------------
+# Check 10: Portworx Enterprise version
+# ---------------------------------------------------------------------------
+
+# Old PX version (2.9.0 < 3.3.0)
+input_old_px_version := {
+	"cluster": {
+		"collectors": {
+			"portworx-kubevirt": {
+				"_cluster": {
+					"storageClasses":  [],
+					"storageProfiles": [],
+					"storageClusters": [
+						{
+							"name":            "portworx",
+							"namespace":       "portworx",
+							"version":         "2.9.0",
+							"operatorVersion": "25.2.1",
+							"storkVersion":    "25.2.0",
+						},
+					],
+					"pvcs": [],
+				},
+			},
+		},
+	},
+}
+
+# Missing PX version (empty string)
+input_unknown_px_version := {
+	"cluster": {
+		"collectors": {
+			"portworx-kubevirt": {
+				"_cluster": {
+					"storageClasses":  [],
+					"storageProfiles": [],
+					"storageClusters": [
+						{
+							"name":            "portworx",
+							"namespace":       "portworx",
+							"version":         "",
+							"operatorVersion": "25.2.1",
+							"storkVersion":    "25.2.0",
+						},
+					],
+					"pvcs": [],
+				},
+			},
+		},
+	},
+}
+
+test_px_version_ok if {
+	findings := data.kvirtbp.findings with input as input_compliant
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-px-version"]
+	count(fs) == 1
+	fs[0].pass == true
+	fs[0].reasonCode == "prod.px.kubevirt.px_version.ok"
+}
+
+test_px_version_too_old_fail if {
+	findings := data.kvirtbp.findings with input as input_old_px_version
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-px-version"]
+	count(fs) == 1
+	fs[0].pass == false
+	fs[0].reasonCode == "prod.px.kubevirt.px_version.too_old"
+}
+
+test_px_version_unknown_fail if {
+	findings := data.kvirtbp.findings with input as input_unknown_px_version
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-px-version"]
+	count(fs) == 1
+	fs[0].pass == false
+	fs[0].reasonCode == "prod.px.kubevirt.px_version.unknown"
+}
+
+# ---------------------------------------------------------------------------
+# Check 11: Portworx Operator version
+# ---------------------------------------------------------------------------
+
+input_old_operator_version := {
+	"cluster": {
+		"collectors": {
+			"portworx-kubevirt": {
+				"_cluster": {
+					"storageClasses":  [],
+					"storageProfiles": [],
+					"storageClusters": [
+						{
+							"name":            "portworx",
+							"namespace":       "portworx",
+							"version":         "3.3.0",
+							"operatorVersion": "24.1.0",
+							"storkVersion":    "25.2.0",
+						},
+					],
+					"pvcs": [],
+				},
+			},
+		},
+	},
+}
+
+test_operator_version_ok if {
+	findings := data.kvirtbp.findings with input as input_compliant
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-operator-version"]
+	count(fs) == 1
+	fs[0].pass == true
+	fs[0].reasonCode == "prod.px.kubevirt.operator_version.ok"
+}
+
+test_operator_version_too_old_fail if {
+	findings := data.kvirtbp.findings with input as input_old_operator_version
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-operator-version"]
+	count(fs) == 1
+	fs[0].pass == false
+	fs[0].reasonCode == "prod.px.kubevirt.operator_version.too_old"
+}
+
+# ---------------------------------------------------------------------------
+# Check 12: Portworx Stork version
+# ---------------------------------------------------------------------------
+
+input_old_stork_version := {
+	"cluster": {
+		"collectors": {
+			"portworx-kubevirt": {
+				"_cluster": {
+					"storageClasses":  [],
+					"storageProfiles": [],
+					"storageClusters": [
+						{
+							"name":            "portworx",
+							"namespace":       "portworx",
+							"version":         "3.3.0",
+							"operatorVersion": "25.2.1",
+							"storkVersion":    "25.1.0",
+						},
+					],
+					"pvcs": [],
+				},
+			},
+		},
+	},
+}
+
+input_stork_not_configured := {
+	"cluster": {
+		"collectors": {
+			"portworx-kubevirt": {
+				"_cluster": {
+					"storageClasses":  [],
+					"storageProfiles": [],
+					"storageClusters": [
+						{
+							"name":            "portworx",
+							"namespace":       "portworx",
+							"version":         "3.3.0",
+							"operatorVersion": "25.2.1",
+							"storkVersion":    "",
+						},
+					],
+					"pvcs": [],
+				},
+			},
+		},
+	},
+}
+
+test_stork_version_ok if {
+	findings := data.kvirtbp.findings with input as input_compliant
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-stork-version"]
+	count(fs) == 1
+	fs[0].pass == true
+	fs[0].reasonCode == "prod.px.kubevirt.stork_version.ok"
+}
+
+test_stork_version_too_old_fail if {
+	findings := data.kvirtbp.findings with input as input_old_stork_version
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-stork-version"]
+	count(fs) == 1
+	fs[0].pass == false
+	fs[0].reasonCode == "prod.px.kubevirt.stork_version.too_old"
+}
+
+test_stork_not_configured_pass if {
+	findings := data.kvirtbp.findings with input as input_stork_not_configured
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-stork-version"]
+	count(fs) == 1
+	fs[0].pass == true
+	fs[0].reasonCode == "prod.px.kubevirt.stork_version.not_configured"
+}
+
+# ---------------------------------------------------------------------------
+# Version comparison helper: edge cases
+# ---------------------------------------------------------------------------
+
+# Exact minimum boundary — should pass
+test_version_exact_minimum if {
+	data.kvirtbp.version_gte("3.3.0", "3.3.0")
+}
+
+# Minor version bump — should pass
+test_version_minor_bump if {
+	data.kvirtbp.version_gte("3.10.0", "3.3.0")
+}
+
+# Patch version below — should fail
+test_version_patch_below if {
+	not data.kvirtbp.version_gte("3.3.0", "3.3.1")
+}
+
+# Major version below — should fail
+test_version_major_below if {
+	not data.kvirtbp.version_gte("2.9.9", "3.0.0")
 }
