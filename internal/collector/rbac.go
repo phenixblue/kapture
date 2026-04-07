@@ -41,6 +41,8 @@ func ensureCollectorRBAC(ctx context.Context, clients *kube.Clients, collectorNa
 	}
 
 	// ClusterRole — cluster-scoped; holds the policy rules from the config.
+	// If the role already exists (e.g. from a previous run), update its rules
+	// so that any newly-added permissions take effect immediately.
 	cr := &rbacv1.ClusterRole{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   name,
@@ -48,8 +50,12 @@ func ensureCollectorRBAC(ctx context.Context, clients *kube.Clients, collectorNa
 		},
 		Rules: toK8sPolicyRules(rbac.Rules),
 	}
-	if _, err := clients.Core.RbacV1().ClusterRoles().Create(ctx, cr, metav1.CreateOptions{}); err != nil && !errors.IsAlreadyExists(err) {
-		return "", fmt.Errorf("create cluster role %q: %w", name, err)
+	_, err := clients.Core.RbacV1().ClusterRoles().Create(ctx, cr, metav1.CreateOptions{})
+	if errors.IsAlreadyExists(err) {
+		_, err = clients.Core.RbacV1().ClusterRoles().Update(ctx, cr, metav1.UpdateOptions{})
+	}
+	if err != nil {
+		return "", fmt.Errorf("ensure cluster role %q: %w", name, err)
 	}
 
 	// ClusterRoleBinding — binds the SA to the ClusterRole.

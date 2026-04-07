@@ -76,10 +76,10 @@ def _ws_exec(ns, pod_name, cmd, container):
         })
         resp = conn.getresponse()
         if resp.status != 101:
-            body = resp.read(256)
+            body = resp.read(1024)
             diag = 'upgrade_rejected: HTTP {} {}: {}'.format(
                 resp.status, resp.reason,
-                body.decode(errors='replace').strip()[:150])
+                body.decode(errors='replace').strip()[:500])
             return b'', b'', diag
 
         # 101 Switching Protocols — WebSocket is active.

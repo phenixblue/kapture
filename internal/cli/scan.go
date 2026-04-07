@@ -9,6 +9,8 @@ import (
 	"os"
 	"time"
 
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
 	"github.com/phenixblue/kvirtbp/internal/bundle"
 	"github.com/phenixblue/kvirtbp/internal/checks"
 	"github.com/phenixblue/kvirtbp/internal/collector"
@@ -173,6 +175,16 @@ func newScanCmd(outputFlag *string, kubeconfigPath *string, kubeContext *string)
 				}
 				if snap.Collectors == nil {
 					snap.Collectors = make(map[string]any)
+				}
+				nsCreated, nsErr := ensureNamespace(ctx, clients, collectorNamespace)
+				if nsErr != nil {
+					return fmt.Errorf("ensure collector namespace %q: %w", collectorNamespace, nsErr)
+				}
+				if !noCollectorCleanup && nsCreated {
+					defer func() {
+						_ = clients.Core.CoreV1().Namespaces().Delete(
+							context.Background(), collectorNamespace, metav1.DeleteOptions{})
+					}()
 				}
 				inlineOpts := collector.RunOptions{
 					Namespace:     collectorNamespace,
