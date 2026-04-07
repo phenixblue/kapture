@@ -35,6 +35,25 @@ p = os.environ.get('KUBERNETES_SERVICE_PORT', '443')
 BASE = 'https://' + h + ':' + p
 ctx = ssl.create_default_context(cafile=SAR + '/ca.crt')
 
+# ── Startup identity diagnostics ───────────────────────────────────────────────
+# Decode the JWT payload (no signature verification needed — we just want to
+# see which ServiceAccount this pod is actually running as so we can verify
+# the ClusterRoleBinding subject matches.
+try:
+    _jwt_payload = tok.split('.')[1]
+    # JWT base64url uses - and _ instead of + and /; pad to multiple of 4.
+    _jwt_b64 = _jwt_payload.replace('-', '+').replace('_', '/')
+    _jwt_b64 += '=' * (-len(_jwt_b64) % 4)
+    _jwt_claims = json.loads(base64.b64decode(_jwt_b64).decode())
+    _sa_ref = _jwt_claims.get('sub', '?')          # system:serviceaccount:ns:name
+    _sa_ns  = _jwt_claims.get('kubernetes.io/serviceaccount/namespace',
+              open(SAR + '/namespace').read().strip() if os.path.exists(SAR + '/namespace') else '?')
+except Exception as _e:
+    _sa_ref = 'decode-error:{}'.format(_e)
+    _sa_ns  = '?'
+print('[identity] serviceaccount={} namespace={} apiserver={}:{}'.format(
+      _sa_ref, _sa_ns, h, p), file=sys.stderr)
+
 
 def _ws_exec(ns, pod_name, cmd, container):
     """Run cmd in pod_name via K8s WebSocket exec API.
@@ -55,6 +74,7 @@ def _ws_exec(ns, pod_name, cmd, container):
          'container=' + _up.quote(container)]
     )
     path = '/api/v1/namespaces/{}/pods/{}/exec?{}'.format(ns, pod_name, qs)
+    print('[ws_exec] GET {}'.format(path), file=sys.stderr)
     ws_key = base64.b64encode(os.urandom(16)).decode()
     stdout = b''
     stderr = b''
