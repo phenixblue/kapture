@@ -303,6 +303,25 @@ pvcs = [
     for pvc in pvc_list.get('items', [])
 ]
 
+# ── VirtualMachines ─────────────────────────────────────────────────────────────
+virtual_machines = []
+_vm_list = get('/apis/kubevirt.io/v1/virtualmachines')
+for _vm in _vm_list.get('items', []):
+    _vm_disks = []
+    for _d in _vm.get('spec', {}).get('domain', {}).get('devices', {}).get('disks', []):
+        _bs = _d.get('blockSize', {}).get('custom', {})
+        _vm_disks.append({
+            'name':              _d.get('name', ''),
+            'isRootDisk':        _d.get('bootOrder', 0) == 1,
+            'blockSizeLogical':  _bs.get('logical', 0),
+            'blockSizePhysical': _bs.get('physical', 0),
+        })
+    virtual_machines.append({
+        'name':      _vm['metadata']['name'],
+        'namespace': _vm['metadata']['namespace'],
+        'disks':     _vm_disks,
+    })
+
 # ── pxctl status ───────────────────────────────────────────────────────────────
 pxctl_status = {}
 _px_ns, _px_pod, _px_container = _find_px_pod()
@@ -380,6 +399,7 @@ json.dump(
         'storageProfiles':  profiles,
         'storageClusters':  clusters,
         'pvcs':             pvcs,
+        'virtualMachines':  virtual_machines,
         'pxctlStatus':      pxctl_status,
     },
     open('/tmp/kvirtbp/output.json', 'w'),

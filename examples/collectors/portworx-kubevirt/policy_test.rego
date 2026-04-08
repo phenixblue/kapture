@@ -750,6 +750,23 @@ _pxctl_only(ps) := {
 	},
 }
 
+_vm_only(vms) := {
+	"cluster": {
+		"collectors": {
+			"portworx-kubevirt": {
+				"_cluster": {
+					"storageClasses":  [],
+					"storageProfiles": [],
+					"storageClusters": [],
+					"pvcs":            [],
+					"virtualMachines": vms,
+					"pxctlStatus":     {},
+				},
+			},
+		},
+	},
+}
+
 _good_pxctl := {
 	"clusterStatus":        "STATUS_OK",
 	"license":              "PX-Enterprise (expires in 100 days)",
@@ -1034,4 +1051,158 @@ test_node_health_storage_down_fail if {
 	count(fs) == 1
 	fs[0].pass == false
 	fs[0].severity == "error"
+}
+
+# ---------------------------------------------------------------------------
+# Check 19: VM disk block sizes
+# ---------------------------------------------------------------------------
+
+# One root disk (exempt) + one correctly configured data disk → pass.
+test_vm_disk_blocksize_ok if {
+	vms := [{
+		"name": "my-vm", "namespace": "vms",
+		"disks": [
+			{"name": "rootdisk",    "isRootDisk": true,  "blockSizeLogical": 512,  "blockSizePhysical": 4096},
+			{"name": "data-disk-1", "isRootDisk": false, "blockSizeLogical": 4096, "blockSizePhysical": 4096},
+		],
+	}]
+	inp := _vm_only(vms)
+	findings := data.kvirtbp.cluster_findings with input as inp
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-vm-disk-blocksize"]
+	count(fs) == 1
+	fs[0].pass == true
+	fs[0].severity == "info"
+	fs[0].reasonCode == "prod.px.kubevirt.vm_disk_blocksize.ok"
+}
+
+# No VMs at all → check is skipped (no finding emitted).
+test_vm_disk_blocksize_no_vms_skip if {
+	inp := _vm_only([])
+	findings := data.kvirtbp.cluster_findings with input as inp
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-vm-disk-blocksize"]
+	count(fs) == 0
+}
+
+# Only root disks present (no data disks) → check is skipped.
+test_vm_disk_blocksize_only_root_skip if {
+	vms := [{
+		"name": "my-vm", "namespace": "vms",
+		"disks": [
+			{"name": "rootdisk", "isRootDisk": true, "blockSizeLogical": 512, "blockSizePhysical": 4096},
+		],
+	}]
+	inp := _vm_only(vms)
+	findings := data.kvirtbp.cluster_findings with input as inp
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-vm-disk-blocksize"]
+	count(fs) == 0
+}
+
+# Data disk with physical=512 (supported but not recommended) → warning.
+test_vm_disk_blocksize_physical_512_fail if {
+	vms := [{
+		"name": "my-vm", "namespace": "vms",
+		"disks": [
+			{"name": "data-disk-1", "isRootDisk": false, "blockSizeLogical": 4096, "blockSizePhysical": 512},
+		],
+	}]
+	inp := _vm_only(vms)
+	findings := data.kvirtbp.cluster_findings with input as inp
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-vm-disk-blocksize"]
+	count(fs) == 1
+	fs[0].pass == false
+	fs[0].severity == "warning"
+	fs[0].reasonCode == "prod.px.kubevirt.vm_disk_blocksize.not_4k"
+}
+
+# Data disk with neither size set (both 0) → warning.
+test_vm_disk_blocksize_unset_fail if {
+	vms := [{
+		"name": "my-vm", "namespace": "vms",
+		"disks": [
+			{"name": "data-disk-1", "isRootDisk": false, "blockSizeLogical": 0, "blockSizePhysical": 0},
+		],
+	}]
+	inp := _vm_only(vms)
+	findings := data.kvirtbp.cluster_findings with input as inp
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-vm-disk-blocksize"]
+	count(fs) == 1
+	fs[0].pass == false
+	fs[0].severity == "warning"
+}
+
+# ---------------------------------------------------------------------------
+# Check 19: VM disk block sizes
+# ---------------------------------------------------------------------------
+
+# One root disk (exempt) + one correctly configured data disk → pass.
+test_vm_disk_blocksize_ok if {
+	vms := [{
+		"name": "my-vm", "namespace": "vms",
+		"disks": [
+			{"name": "rootdisk",    "isRootDisk": true,  "blockSizeLogical": 512,  "blockSizePhysical": 4096},
+			{"name": "data-disk-1", "isRootDisk": false, "blockSizeLogical": 4096, "blockSizePhysical": 4096},
+		],
+	}]
+	inp := _vm_only(vms)
+	findings := data.kvirtbp.cluster_findings with input as inp
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-vm-disk-blocksize"]
+	count(fs) == 1
+	fs[0].pass == true
+	fs[0].severity == "info"
+	fs[0].reasonCode == "prod.px.kubevirt.vm_disk_blocksize.ok"
+}
+
+# No VMs at all → check is skipped (no finding emitted).
+test_vm_disk_blocksize_no_vms_skip if {
+	inp := _vm_only([])
+	findings := data.kvirtbp.cluster_findings with input as inp
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-vm-disk-blocksize"]
+	count(fs) == 0
+}
+
+# Only root disks present (no data disks) → check is skipped.
+test_vm_disk_blocksize_only_root_skip if {
+	vms := [{
+		"name": "my-vm", "namespace": "vms",
+		"disks": [
+			{"name": "rootdisk", "isRootDisk": true, "blockSizeLogical": 512, "blockSizePhysical": 4096},
+		],
+	}]
+	inp := _vm_only(vms)
+	findings := data.kvirtbp.cluster_findings with input as inp
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-vm-disk-blocksize"]
+	count(fs) == 0
+}
+
+# Data disk with physical=512 (supported but not recommended) → warning.
+test_vm_disk_blocksize_physical_512_fail if {
+	vms := [{
+		"name": "my-vm", "namespace": "vms",
+		"disks": [
+			{"name": "data-disk-1", "isRootDisk": false, "blockSizeLogical": 4096, "blockSizePhysical": 512},
+		],
+	}]
+	inp := _vm_only(vms)
+	findings := data.kvirtbp.cluster_findings with input as inp
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-vm-disk-blocksize"]
+	count(fs) == 1
+	fs[0].pass == false
+	fs[0].severity == "warning"
+	fs[0].reasonCode == "prod.px.kubevirt.vm_disk_blocksize.not_4k"
+}
+
+# Data disk with neither size set (both 0) → warning.
+test_vm_disk_blocksize_unset_fail if {
+	vms := [{
+		"name": "my-vm", "namespace": "vms",
+		"disks": [
+			{"name": "data-disk-1", "isRootDisk": false, "blockSizeLogical": 0, "blockSizePhysical": 0},
+		],
+	}]
+	inp := _vm_only(vms)
+	findings := data.kvirtbp.cluster_findings with input as inp
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-vm-disk-blocksize"]
+	count(fs) == 1
+	fs[0].pass == false
+	fs[0].severity == "warning"
 }

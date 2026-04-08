@@ -47,6 +47,11 @@
             "apiGroups": [""],
             "resources": ["pods/exec"],
             "verbs": ["get", "create"]
+          },
+          {
+            "apiGroups": ["kubevirt.io"],
+            "resources": ["virtualmachines"],
+            "verbs": ["get", "list"]
           }
         ]
       }

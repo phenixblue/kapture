@@ -42,6 +42,15 @@
 #         "storageClassName": "px-rwx-block-kubevirt",
 #         "accessModes": ["ReadWriteMany"], "volumeMode": "Block"
 #       }
+#     ],
+#     "virtualMachines": [
+#       {
+#         "name": "my-vm", "namespace": "vms",
+#         "disks": [
+#           { "name": "rootdisk",    "isRootDisk": true,  "blockSizeLogical": 512,  "blockSizePhysical": 4096 },
+#           { "name": "data-disk-1", "isRootDisk": false, "blockSizeLogical": 4096, "blockSizePhysical": 4096 }
+#         ]
+#       }
 #     ]
 #   }
 #
@@ -64,6 +73,7 @@
 #   prod-px-kubevirt-local-pool-free    — each local storage pool >= 20% free
 #   prod-px-kubevirt-storev2-metadata   — storev2 nodes have metadata device >= 64 GiB
 #   prod-px-kubevirt-node-health        — all storage nodes online with storage status Up
+#   prod-px-kubevirt-vm-disk-blocksize  — non-root VM disks have blockSize logical=4096 physical=4096
 #
 # References:
 #   https://docs.portworx.com/portworx-enterprise/provision-storage/kubevirt-vms/
@@ -121,6 +131,7 @@ px_storage_classes := object.get(px_data, "storageClasses", [])
 px_storage_profiles := object.get(px_data, "storageProfiles", [])
 px_storage_clusters := object.get(px_data, "storageClusters", [])
 px_pvcs := object.get(px_data, "pvcs", [])
+px_vms := object.get(px_data, "virtualMachines", [])
 
 # ---------------------------------------------------------------------------
 # Check 1: collector data is present
@@ -1243,10 +1254,94 @@ node_health_findings := [] if {
 }
 
 # ---------------------------------------------------------------------------
+# Check 19: Non-root VM disk block sizes are 4096/4096
+#
+# For Portworx RWX raw block volumes, non-boot data disks should specify
+# blockSize.custom.logical=4096 and blockSize.custom.physical=4096 for
+# optimal I/O performance. Without this the hypervisor emulates 4k-on-512
+# which adds overhead. The root disk (bootOrder: 1) is exempt — 512-byte
+# logical is required for BIOS boot compatibility.
+#
+# Supported configuration matrix for additional disks:
+#   logical=4096, physical=4096 → Yes (Recommended)
+#   logical=4096, physical=512  → Yes (supported but not recommended)
+#
+# Reference:
+#   https://docs.portworx.com/portworx-enterprise/provision-storage/kubevirt-vms/
+#       manage-kubevirt-vms-rwx-block/openshift
+#       #vm-configuration-guidelines-for-portworx-raw-block-volumes
+# ---------------------------------------------------------------------------
+
+# A data disk is correctly configured when both sizes are 4096.
+_disk_4k_ok(disk) if {
+	disk.blockSizeLogical  == 4096
+	disk.blockSizePhysical == 4096
+}
+
+# Non-root disks where logical or physical block size is not 4096.
+vm_disk_blocksize_violations := [msg |
+	some vm in px_vms
+	some disk in vm.disks
+	not disk.isRootDisk
+	not _disk_4k_ok(disk)
+	msg := sprintf("%s/%s disk=%s (logical=%v, physical=%v)",
+		[vm.namespace, vm.name, disk.name, disk.blockSizeLogical, disk.blockSizePhysical])
+]
+
+# All non-root disks across all VMs (used for count in pass message and skip logic).
+_all_data_disks := [disk |
+	some vm in px_vms
+	some disk in vm.disks
+	not disk.isRootDisk
+]
+
+vm_disk_blocksize_findings := [{
+	"checkId":    "prod-px-kubevirt-vm-disk-blocksize",
+	"title":      "KubeVirt VM Non-Root Disk Block Size",
+	"category":   "production-readiness",
+	"severity":   "info",
+	"pass":        true,
+	"reasonCode": "prod.px.kubevirt.vm_disk_blocksize.ok",
+	"message":    sprintf("all %d non-root VM disk(s) have blockSize logical=4096 physical=4096", [count(_all_data_disks)]),
+}] if {
+	collector_present
+	count(_all_data_disks) > 0
+	count(vm_disk_blocksize_violations) == 0
+}
+
+vm_disk_blocksize_findings := [{
+	"checkId":     "prod-px-kubevirt-vm-disk-blocksize",
+	"title":       "KubeVirt VM Non-Root Disk Block Size",
+	"category":    "production-readiness",
+	"severity":    "warning",
+	"pass":         false,
+	"reasonCode":  "prod.px.kubevirt.vm_disk_blocksize.not_4k",
+	"message":     sprintf("%d non-root VM disk(s) do not have blockSize logical=4096 physical=4096: %v", [count(vm_disk_blocksize_violations), vm_disk_blocksize_violations]),
+	"evidence":    {"violating": sprintf("%v", [vm_disk_blocksize_violations])},
+	"remediation": "Set blockSize.custom.logical=4096 and blockSize.custom.physical=4096 on non-root VM disks backed by Portworx RWX block volumes. See https://docs.portworx.com/portworx-enterprise/provision-storage/kubevirt-vms/manage-kubevirt-vms-rwx-block/openshift#vm-configuration-guidelines-for-portworx-raw-block-volumes",
+}] if {
+	collector_present
+	count(vm_disk_blocksize_violations) > 0
+}
+
+vm_disk_blocksize_findings := [] if { not collector_present }
+
+vm_disk_blocksize_findings := [] if {
+	collector_present
+	count(px_vms) == 0
+}
+
+vm_disk_blocksize_findings := [] if {
+	collector_present
+	count(px_vms) > 0
+	count(_all_data_disks) == 0
+}
+
+# ---------------------------------------------------------------------------
 # Entrypoint
 # ---------------------------------------------------------------------------
 
-cluster_findings := array.concat(
+_pre_vm_disk_findings := array.concat(
 	array.concat(
 		array.concat(
 			array.concat(
@@ -1295,3 +1390,5 @@ cluster_findings := array.concat(
 	),
 	node_health_findings,
 )
+
+cluster_findings := array.concat(_pre_vm_disk_findings, vm_disk_blocksize_findings)
