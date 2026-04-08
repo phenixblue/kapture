@@ -308,7 +308,16 @@ virtual_machines = []
 _vm_list = get('/apis/kubevirt.io/v1/virtualmachines')
 for _vm in _vm_list.get('items', []):
     _vm_disks = []
-    for _d in _vm.get('spec', {}).get('template', {}).get('spec', {}).get('domain', {}).get('devices', {}).get('disks', []):
+    _vm_spec = _vm.get('spec', {}).get('template', {}).get('spec', {})
+    # Only include disks backed by a PVC or DataVolume; skip cloudInit, containers, etc.
+    _pvc_backed = {
+        _v['name']
+        for _v in _vm_spec.get('volumes', [])
+        if 'persistentVolumeClaim' in _v or 'dataVolume' in _v
+    }
+    for _d in _vm_spec.get('domain', {}).get('devices', {}).get('disks', []):
+        if _d.get('name') not in _pvc_backed:
+            continue
         _bs = _d.get('blockSize', {}).get('custom', {})
         _vm_disks.append({
             'name':              _d.get('name', ''),
