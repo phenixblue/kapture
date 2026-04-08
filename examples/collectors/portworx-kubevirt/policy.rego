@@ -34,7 +34,7 @@
 #       }
 #     ],
 #     "storageClusters": [
-#       { "name": "portworx", "namespace": "portworx", "version": "3.3.0", "operatorVersion": "25.2.1" }
+#       { "name": "portworx", "namespace": "portworx", "version": "3.5.2", "operatorVersion": "25.5.2" }
 #     ],
 #     "pvcs": [
 #       {
@@ -64,9 +64,9 @@
 #   prod-px-kubevirt-storageprofile-block — all PX StorageProfiles include Block+RWX
 #   prod-px-kubevirt-pvc-rwx            — KubeVirt PVCs use ReadWriteMany
 #   prod-px-kubevirt-pvc-block          — KubeVirt PVCs use volumeMode Block
-#   prod-px-kubevirt-px-version         — Portworx Enterprise >= 3.3.0
-#   prod-px-kubevirt-operator-version   — Portworx Operator >= 25.2.1
-#   prod-px-kubevirt-stork-version      — Portworx Stork >= 25.2.0
+#   prod-px-kubevirt-px-version         — Portworx Enterprise >= 3.5.2
+#   prod-px-kubevirt-operator-version   — Portworx Operator >= 25.5.2
+#   prod-px-kubevirt-stork-version      — Portworx Stork >= 26.1.0
 #   prod-px-kubevirt-cluster-status     — Portworx cluster operational (STATUS_OK)
 #   prod-px-kubevirt-license-expiry     — license expires in > 30 days
 #   prod-px-kubevirt-global-pool-free   — global storage pool >= 20% free
@@ -612,7 +612,7 @@ version_gte(actual, minimum) if {
 #       manage-kubevirt-vms-rwx-block/openshift#prerequisites
 # ---------------------------------------------------------------------------
 
-px_min_version := "3.3.0"
+px_min_version := "3.5.2"
 
 # Clusters that do not meet the minimum PX version.
 clusters_px_version_fail := {sprintf("%s/%s (found: %s, required: >= %s)", [c.namespace, c.name, c.version, px_min_version]) |
@@ -689,7 +689,7 @@ px_version_findings := [] if {
 #       manage-kubevirt-vms-rwx-block/openshift#prerequisites
 # ---------------------------------------------------------------------------
 
-operator_min_version := "25.2.1"
+operator_min_version := "25.5.2"
 
 clusters_operator_version_fail := {sprintf("%s/%s (found: %s, required: >= %s)", [c.namespace, c.name, c.operatorVersion, operator_min_version]) |
 	some c in px_storage_clusters
@@ -767,7 +767,7 @@ operator_version_findings := [] if {
 # storkVersion populated this check is skipped (info, not a failure).
 # ---------------------------------------------------------------------------
 
-stork_min_version := "25.2.0"
+stork_min_version := "26.1.0"
 
 clusters_stork_version_fail := {sprintf("%s/%s (found: %s, required: >= %s)", [c.namespace, c.name, c.storkVersion, stork_min_version]) |
 	some c in px_storage_clusters
@@ -843,6 +843,8 @@ pxctl_present if {
 	count(object.keys(px_pxctl)) > 0
 	not object.get(px_pxctl, "_error", false)
 }
+
+px_components := object.get(px_data, "componentVersions", {})
 
 # ---------------------------------------------------------------------------
 # Check 13: Portworx cluster is operational (status == STATUS_OK)
@@ -1347,6 +1349,264 @@ vm_disk_blocksize_findings := [] if {
 }
 
 # ---------------------------------------------------------------------------
+# Check 20: OpenShift Container Platform (OCP) version >= 4.18.33
+#
+# Prerequisite from Best Practices Guide: Portworx Enterprise for
+# OpenShift Virtualization, section 1.1 (Validated Software Versions).
+# ---------------------------------------------------------------------------
+
+ocp_min_version := "4.18.33"
+
+ocp_version_findings := [{
+	"checkId":    "prod-px-kubevirt-ocp-version",
+	"title":      "OpenShift Container Platform Minimum Version",
+	"category":   "production-readiness",
+	"severity":   "info",
+	"pass":        true,
+	"reasonCode": "prod.px.kubevirt.ocp_version.ok",
+	"message":    sprintf("OCP version %s meets minimum %s", [px_components.ocpVersion, ocp_min_version]),
+}] if {
+	collector_present
+	v := object.get(px_components, "ocpVersion", "")
+	v != ""
+	version_gte(v, ocp_min_version)
+}
+
+ocp_version_findings := [{
+	"checkId":     "prod-px-kubevirt-ocp-version",
+	"title":       "OpenShift Container Platform Minimum Version",
+	"category":    "production-readiness",
+	"severity":    "error",
+	"pass":         false,
+	"reasonCode":  "prod.px.kubevirt.ocp_version.too_old",
+	"message":     sprintf("OCP version %s is below minimum %s", [px_components.ocpVersion, ocp_min_version]),
+	"evidence":    {"ocpVersion": px_components.ocpVersion},
+	"remediation": sprintf("Upgrade OpenShift Container Platform to %s or later.", [ocp_min_version]),
+}] if {
+	collector_present
+	v := object.get(px_components, "ocpVersion", "")
+	v != ""
+	not version_gte(v, ocp_min_version)
+}
+
+ocp_version_findings := [{
+	"checkId":     "prod-px-kubevirt-ocp-version",
+	"title":       "OpenShift Container Platform Minimum Version",
+	"category":    "production-readiness",
+	"severity":    "warning",
+	"pass":         false,
+	"reasonCode":  "prod.px.kubevirt.ocp_version.unknown",
+	"message":     "OCP version could not be determined; ClusterVersion CRD may be unavailable",
+	"remediation": "Ensure the collector has get access to config.openshift.io/clusterversions.",
+}] if {
+	collector_present
+	object.get(px_components, "ocpVersion", "") == ""
+}
+
+ocp_version_findings := [] if { not collector_present }
+
+# ---------------------------------------------------------------------------
+# Check 21: OpenShift Virtualization (OSV/KubeVirt operator) version > 4.18.4
+#           (i.e. >= 4.18.5)
+#
+# Prerequisite from Best Practices Guide: Portworx Enterprise for
+# OpenShift Virtualization, section 1.1 (Validated Software Versions).
+# ---------------------------------------------------------------------------
+
+osv_min_version := "4.18.5"
+
+osv_version_findings := [{
+	"checkId":    "prod-px-kubevirt-osv-version",
+	"title":      "OpenShift Virtualization (OSV) Minimum Version",
+	"category":   "production-readiness",
+	"severity":   "info",
+	"pass":        true,
+	"reasonCode": "prod.px.kubevirt.osv_version.ok",
+	"message":    sprintf("OSV/KubeVirt operator version %s meets minimum (> 4.18.4)", [px_components.osvVersion]),
+}] if {
+	collector_present
+	v := object.get(px_components, "osvVersion", "")
+	v != ""
+	version_gte(v, osv_min_version)
+}
+
+osv_version_findings := [{
+	"checkId":     "prod-px-kubevirt-osv-version",
+	"title":       "OpenShift Virtualization (OSV) Minimum Version",
+	"category":    "production-readiness",
+	"severity":    "error",
+	"pass":         false,
+	"reasonCode":  "prod.px.kubevirt.osv_version.too_old",
+	"message":     sprintf("OSV/KubeVirt operator version %s does not meet minimum (> 4.18.4)", [px_components.osvVersion]),
+	"evidence":    {"osvVersion": px_components.osvVersion},
+	"remediation": "Upgrade OpenShift Virtualization operator to a version > 4.18.4.",
+}] if {
+	collector_present
+	v := object.get(px_components, "osvVersion", "")
+	v != ""
+	not version_gte(v, osv_min_version)
+}
+
+# OSV not installed or version not discovered — skip this check.
+osv_version_findings := [] if {
+	collector_present
+	object.get(px_components, "osvVersion", "") == ""
+}
+
+osv_version_findings := [] if { not collector_present }
+
+# ---------------------------------------------------------------------------
+# Check 22: Migration Toolkit for Virtualization (MTV/Forklift) version >= 2.10.5
+#
+# Prerequisite from Best Practices Guide: Portworx Enterprise for
+# OpenShift Virtualization, section 1.1 (Validated Software Versions).
+# ---------------------------------------------------------------------------
+
+mtv_min_version := "2.10.5"
+
+mtv_version_findings := [{
+	"checkId":    "prod-px-kubevirt-mtv-version",
+	"title":      "Migration Toolkit for Virtualization (MTV) Minimum Version",
+	"category":   "production-readiness",
+	"severity":   "info",
+	"pass":        true,
+	"reasonCode": "prod.px.kubevirt.mtv_version.ok",
+	"message":    sprintf("MTV/Forklift version %s meets minimum %s", [px_components.mtvVersion, mtv_min_version]),
+}] if {
+	collector_present
+	v := object.get(px_components, "mtvVersion", "")
+	v != ""
+	version_gte(v, mtv_min_version)
+}
+
+mtv_version_findings := [{
+	"checkId":     "prod-px-kubevirt-mtv-version",
+	"title":       "Migration Toolkit for Virtualization (MTV) Minimum Version",
+	"category":    "production-readiness",
+	"severity":    "error",
+	"pass":         false,
+	"reasonCode":  "prod.px.kubevirt.mtv_version.too_old",
+	"message":     sprintf("MTV/Forklift version %s is below minimum %s", [px_components.mtvVersion, mtv_min_version]),
+	"evidence":    {"mtvVersion": px_components.mtvVersion},
+	"remediation": sprintf("Upgrade Migration Toolkit for Virtualization to %s or later.", [mtv_min_version]),
+}] if {
+	collector_present
+	v := object.get(px_components, "mtvVersion", "")
+	v != ""
+	not version_gte(v, mtv_min_version)
+}
+
+# MTV not installed — skip this check.
+mtv_version_findings := [] if {
+	collector_present
+	object.get(px_components, "mtvVersion", "") == ""
+}
+
+mtv_version_findings := [] if { not collector_present }
+
+# ---------------------------------------------------------------------------
+# Check 23: virt-v2v image version >= 2.7.1
+#
+# The virt-v2v image is used by MTV/Forklift for VM migrations from
+# VMware/oVirt to KubeVirt. Version is discovered from the VIRT_V2V_IMAGE
+# env var on the forklift-controller deployment.
+#
+# Prerequisite from Best Practices Guide: Portworx Enterprise for
+# OpenShift Virtualization, section 1.1 (Validated Software Versions).
+# ---------------------------------------------------------------------------
+
+virtv2v_min_version := "2.7.1"
+
+virtv2v_version_findings := [{
+	"checkId":    "prod-px-kubevirt-virtv2v-version",
+	"title":      "virt-v2v Minimum Version",
+	"category":   "production-readiness",
+	"severity":   "info",
+	"pass":        true,
+	"reasonCode": "prod.px.kubevirt.virtv2v_version.ok",
+	"message":    sprintf("virt-v2v version %s meets minimum %s", [px_components.virtV2VVersion, virtv2v_min_version]),
+}] if {
+	collector_present
+	v := object.get(px_components, "virtV2VVersion", "")
+	v != ""
+	version_gte(v, virtv2v_min_version)
+}
+
+virtv2v_version_findings := [{
+	"checkId":     "prod-px-kubevirt-virtv2v-version",
+	"title":       "virt-v2v Minimum Version",
+	"category":    "production-readiness",
+	"severity":    "error",
+	"pass":         false,
+	"reasonCode":  "prod.px.kubevirt.virtv2v_version.too_old",
+	"message":     sprintf("virt-v2v version %s is below minimum %s", [px_components.virtV2VVersion, virtv2v_min_version]),
+	"evidence":    {"virtV2VVersion": px_components.virtV2VVersion},
+	"remediation": sprintf("Update the virt-v2v image referenced by the MTV/Forklift controller to version %s or later.", [virtv2v_min_version]),
+}] if {
+	collector_present
+	v := object.get(px_components, "virtV2VVersion", "")
+	v != ""
+	not version_gte(v, virtv2v_min_version)
+}
+
+# virt-v2v version not discovered (MTV not installed or env var absent) — skip.
+virtv2v_version_findings := [] if {
+	collector_present
+	object.get(px_components, "virtV2VVersion", "") == ""
+}
+
+virtv2v_version_findings := [] if { not collector_present }
+
+# ---------------------------------------------------------------------------
+# Check 24: PX-Backup version >= 2.10.2
+#
+# Prerequisite from Best Practices Guide: Portworx Enterprise for
+# OpenShift Virtualization, section 1.1 (Validated Software Versions).
+# ---------------------------------------------------------------------------
+
+pxbackup_min_version := "2.10.2"
+
+pxbackup_version_findings := [{
+	"checkId":    "prod-px-kubevirt-pxbackup-version",
+	"title":      "PX-Backup Minimum Version",
+	"category":   "production-readiness",
+	"severity":   "info",
+	"pass":        true,
+	"reasonCode": "prod.px.kubevirt.pxbackup_version.ok",
+	"message":    sprintf("PX-Backup version %s meets minimum %s", [px_components.pxBackupVersion, pxbackup_min_version]),
+}] if {
+	collector_present
+	v := object.get(px_components, "pxBackupVersion", "")
+	v != ""
+	version_gte(v, pxbackup_min_version)
+}
+
+pxbackup_version_findings := [{
+	"checkId":     "prod-px-kubevirt-pxbackup-version",
+	"title":       "PX-Backup Minimum Version",
+	"category":    "production-readiness",
+	"severity":    "error",
+	"pass":         false,
+	"reasonCode":  "prod.px.kubevirt.pxbackup_version.too_old",
+	"message":     sprintf("PX-Backup version %s is below minimum %s", [px_components.pxBackupVersion, pxbackup_min_version]),
+	"evidence":    {"pxBackupVersion": px_components.pxBackupVersion},
+	"remediation": sprintf("Upgrade PX-Backup to %s or later.", [pxbackup_min_version]),
+}] if {
+	collector_present
+	v := object.get(px_components, "pxBackupVersion", "")
+	v != ""
+	not version_gte(v, pxbackup_min_version)
+}
+
+# PX-Backup not installed — skip this check.
+pxbackup_version_findings := [] if {
+	collector_present
+	object.get(px_components, "pxBackupVersion", "") == ""
+}
+
+pxbackup_version_findings := [] if { not collector_present }
+
+# ---------------------------------------------------------------------------
 # Entrypoint
 # ---------------------------------------------------------------------------
 
@@ -1400,4 +1660,18 @@ _pre_vm_disk_findings := array.concat(
 	node_health_findings,
 )
 
-cluster_findings := array.concat(_pre_vm_disk_findings, vm_disk_blocksize_findings)
+_pre_component_findings := array.concat(_pre_vm_disk_findings, vm_disk_blocksize_findings)
+
+cluster_findings := array.concat(
+	array.concat(
+		array.concat(
+			array.concat(
+				array.concat(_pre_component_findings, ocp_version_findings),
+				osv_version_findings,
+			),
+			mtv_version_findings,
+		),
+		virtv2v_version_findings,
+	),
+	pxbackup_version_findings,
+)

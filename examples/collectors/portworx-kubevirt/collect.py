@@ -336,6 +336,80 @@ for _vm in _vm_list.get('items', []):
         'disks':     _vm_disks,
     })
 
+# ── Component Versions ────────────────────────────────────────────────────────
+component_versions = {}
+
+# OCP version via ClusterVersion CRD (always exists on OCP).
+_cv = get('/apis/config.openshift.io/v1/clusterversions/version')
+component_versions['ocpVersion'] = (
+    _cv.get('status', {}).get('desired', {}).get('version', ''))
+print('[components] ocpVersion={}'.format(component_versions['ocpVersion']), file=sys.stderr)
+
+# KubeVirt/OSV operator version via HyperConverged CR status.versions[].
+_hco_list = get('/apis/hco.kubevirt.io/v1beta1/namespaces/openshift-cnv/hyperconvergeds')
+_hco_items = _hco_list.get('items', [])
+if _hco_items:
+    _hco_versions = _hco_items[0].get('status', {}).get('versions', [])
+    _kubevirt_entry = next(
+        (v for v in _hco_versions if v.get('name') == 'kubevirt'), None)
+    component_versions['osvVersion'] = (_kubevirt_entry or {}).get('version', '')
+else:
+    component_versions['osvVersion'] = ''
+print('[components] osvVersion={}'.format(component_versions['osvVersion']), file=sys.stderr)
+
+def _image_tag(image):
+    """Extract the tag (without leading 'v') from a container image reference."""
+    if ':' not in image:
+        return ''
+    tag = image.split(':')[-1]
+    # strip digest suffix: sha256:...
+    tag = tag.split('@')[0]
+    return tag.lstrip('v')
+
+# MTV/Forklift: forklift-controller deployment image tag in openshift-mtv.
+_mtv_deps = get('/apis/apps/v1/namespaces/openshift-mtv/deployments')
+_forklift_dep = next(
+    (d for d in _mtv_deps.get('items', [])
+     if 'forklift-controller' in d.get('metadata', {}).get('name', '')),
+    None)
+if _forklift_dep:
+    _fc_containers = (_forklift_dep.get('spec', {}).get('template', {})
+                      .get('spec', {}).get('containers', []))
+    _fc_image = next(
+        (c['image'] for c in _fc_containers
+         if 'forklift-controller' in c.get('name', '')),
+        _fc_containers[0]['image'] if _fc_containers else '')
+    component_versions['mtvVersion'] = _image_tag(_fc_image)
+    # virt-v2v image passed as env var VIRT_V2V_IMAGE on the same deployment.
+    _all_envs = {e['name']: e.get('value', '')
+                 for c in _fc_containers
+                 for e in c.get('env', [])}
+    _v2v_image = _all_envs.get('VIRT_V2V_IMAGE', '')
+    component_versions['virtV2VVersion'] = _image_tag(_v2v_image)
+else:
+    component_versions['mtvVersion'] = ''
+    component_versions['virtV2VVersion'] = ''
+print('[components] mtvVersion={} virtV2VVersion={}'.format(
+    component_versions['mtvVersion'], component_versions['virtV2VVersion']), file=sys.stderr)
+
+# PX-Backup: px-backup deployment image tag in px-backup namespace.
+_pxb_deps = get('/apis/apps/v1/namespaces/px-backup/deployments')
+_pxb_dep = next(
+    (d for d in _pxb_deps.get('items', [])
+     if 'px-backup' in d.get('metadata', {}).get('name', '')),
+    None)
+if _pxb_dep:
+    _pxb_containers = (_pxb_dep.get('spec', {}).get('template', {})
+                       .get('spec', {}).get('containers', []))
+    _pxb_image = next(
+        (c['image'] for c in _pxb_containers
+         if 'px-backup' in c.get('name', '')),
+        _pxb_containers[0]['image'] if _pxb_containers else '')
+    component_versions['pxBackupVersion'] = _image_tag(_pxb_image)
+else:
+    component_versions['pxBackupVersion'] = ''
+print('[components] pxBackupVersion={}'.format(component_versions['pxBackupVersion']), file=sys.stderr)
+
 # ── pxctl status ───────────────────────────────────────────────────────────────
 pxctl_status = {}
 _px_ns, _px_pod, _px_container = _find_px_pod()
@@ -409,12 +483,13 @@ import os as _os
 _os.makedirs('/tmp/kvirtbp', exist_ok=True)
 json.dump(
     {
-        'storageClasses':   px_scs,
-        'storageProfiles':  profiles,
-        'storageClusters':  clusters,
-        'pvcs':             pvcs,
-        'virtualMachines':  virtual_machines,
-        'pxctlStatus':      pxctl_status,
+        'storageClasses':      px_scs,
+        'storageProfiles':     profiles,
+        'storageClusters':     clusters,
+        'pvcs':                pvcs,
+        'virtualMachines':     virtual_machines,
+        'componentVersions':   component_versions,
+        'pxctlStatus':         pxctl_status,
     },
     open('/tmp/kvirtbp/output.json', 'w'),
 )

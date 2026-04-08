@@ -52,6 +52,21 @@
             "apiGroups": ["kubevirt.io"],
             "resources": ["virtualmachines"],
             "verbs": ["get", "list"]
+          },
+          {
+            "apiGroups": ["apps"],
+            "resources": ["deployments"],
+            "verbs": ["get", "list"]
+          },
+          {
+            "apiGroups": ["config.openshift.io"],
+            "resources": ["clusterversions"],
+            "verbs": ["get"]
+          },
+          {
+            "apiGroups": ["hco.kubevirt.io"],
+            "resources": ["hyperconvergeds"],
+            "verbs": ["get", "list"]
           }
         ]
       }

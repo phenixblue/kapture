@@ -48,9 +48,9 @@ input_compliant := {
 						{
 							"name":            "portworx",
 							"namespace":       "portworx",
-							"version":         "3.3.0",
-							"operatorVersion": "25.2.1",
-							"storkVersion":    "25.2.0",
+							"version":         "3.5.2",
+							"operatorVersion": "25.5.2",
+							"storkVersion":    "26.1.0",
 						},
 					],
 					"pvcs": [
@@ -86,6 +86,13 @@ input_compliant := {
 								"metadataDeviceSizeBytes": 68719476736,
 							},
 						],
+					},
+					"componentVersions": {
+						"ocpVersion":     "4.18.33",
+						"osvVersion":     "4.18.5",
+						"mtvVersion":     "2.10.5",
+						"virtV2VVersion": "2.7.1",
+						"pxBackupVersion": "2.10.2",
 					},
 				},
 			},
@@ -502,7 +509,7 @@ test_compliant_all_pass if {
 # Check 10: Portworx Enterprise version
 # ---------------------------------------------------------------------------
 
-# Old PX version (2.9.0 < 3.3.0)
+# Old PX version (2.9.0 < 3.5.2)
 input_old_px_version := {
 	"cluster": {
 		"collectors": {
@@ -515,8 +522,8 @@ input_old_px_version := {
 							"name":            "portworx",
 							"namespace":       "portworx",
 							"version":         "2.9.0",
-							"operatorVersion": "25.2.1",
-							"storkVersion":    "25.2.0",
+							"operatorVersion": "25.5.2",
+							"storkVersion":    "26.1.0",
 						},
 					],
 					"pvcs": [],
@@ -539,8 +546,8 @@ input_unknown_px_version := {
 							"name":            "portworx",
 							"namespace":       "portworx",
 							"version":         "",
-							"operatorVersion": "25.2.1",
-							"storkVersion":    "25.2.0",
+							"operatorVersion": "25.5.2",
+							"storkVersion":    "26.1.0",
 						},
 					],
 					"pvcs": [],
@@ -589,9 +596,9 @@ input_old_operator_version := {
 						{
 							"name":            "portworx",
 							"namespace":       "portworx",
-							"version":         "3.3.0",
+							"version":         "3.5.2",
 							"operatorVersion": "24.1.0",
-							"storkVersion":    "25.2.0",
+							"storkVersion":    "26.1.0",
 						},
 					],
 					"pvcs": [],
@@ -632,8 +639,8 @@ input_old_stork_version := {
 						{
 							"name":            "portworx",
 							"namespace":       "portworx",
-							"version":         "3.3.0",
-							"operatorVersion": "25.2.1",
+							"version":         "3.5.2",
+							"operatorVersion": "25.5.2",
 							"storkVersion":    "25.1.0",
 						},
 					],
@@ -655,8 +662,8 @@ input_stork_not_configured := {
 						{
 							"name":            "portworx",
 							"namespace":       "portworx",
-							"version":         "3.3.0",
-							"operatorVersion": "25.2.1",
+							"version":         "3.5.2",
+							"operatorVersion": "25.5.2",
 							"storkVersion":    "",
 						},
 					],
@@ -1054,80 +1061,219 @@ test_node_health_storage_down_fail if {
 }
 
 # ---------------------------------------------------------------------------
-# Check 19: VM disk block sizes
+# Check 20-24: Component version checks (OCP, OSV, MTV, virt-v2v, PX-Backup)
 # ---------------------------------------------------------------------------
 
-# One root disk (exempt) + one correctly configured data disk → pass.
-test_vm_disk_blocksize_ok if {
-	vms := [{
-		"name": "my-vm", "namespace": "vms",
-		"disks": [
-			{"name": "rootdisk",    "isRootDisk": true,  "blockSizeLogical": 512,  "blockSizePhysical": 4096},
-			{"name": "data-disk-1", "isRootDisk": false, "blockSizeLogical": 4096, "blockSizePhysical": 4096},
-		],
-	}]
-	inp := _vm_only(vms)
+# Helper: minimal input with only componentVersions set (no VMs, no StorageClusters etc.)
+_components_only(cv) := {
+	"cluster": {
+		"collectors": {
+			"portworx-kubevirt": {
+				"_cluster": {
+					"storageClasses":    [],
+					"storageProfiles":   [],
+					"storageClusters":   [],
+					"pvcs":              [],
+					"virtualMachines":   [],
+					"componentVersions": cv,
+				},
+			},
+		},
+	},
+}
+
+# ── Check 20: OCP version ──────────────────────────────────────────────────
+
+# Compliant OCP version → pass info.
+test_ocp_version_ok if {
+	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": ""})
 	findings := data.kvirtbp.cluster_findings with input as inp
-	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-vm-disk-blocksize"]
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-ocp-version"]
 	count(fs) == 1
 	fs[0].pass == true
 	fs[0].severity == "info"
-	fs[0].reasonCode == "prod.px.kubevirt.vm_disk_blocksize.ok"
+	fs[0].reasonCode == "prod.px.kubevirt.ocp_version.ok"
 }
 
-# No VMs at all → check is skipped (no finding emitted).
-test_vm_disk_blocksize_no_vms_skip if {
-	inp := _vm_only([])
+# OCP version newer than minimum → pass.
+test_ocp_version_newer_ok if {
+	inp := _components_only({"ocpVersion": "4.19.0", "osvVersion": "", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": ""})
 	findings := data.kvirtbp.cluster_findings with input as inp
-	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-vm-disk-blocksize"]
-	count(fs) == 0
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-ocp-version"]
+	count(fs) == 1
+	fs[0].pass == true
 }
 
-# Only root disks present (no data disks) → check is skipped.
-test_vm_disk_blocksize_only_root_skip if {
-	vms := [{
-		"name": "my-vm", "namespace": "vms",
-		"disks": [
-			{"name": "rootdisk", "isRootDisk": true, "blockSizeLogical": 512, "blockSizePhysical": 4096},
-		],
-	}]
-	inp := _vm_only(vms)
+# OCP version too old → error.
+test_ocp_version_too_old_fail if {
+	inp := _components_only({"ocpVersion": "4.18.10", "osvVersion": "", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": ""})
 	findings := data.kvirtbp.cluster_findings with input as inp
-	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-vm-disk-blocksize"]
-	count(fs) == 0
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-ocp-version"]
+	count(fs) == 1
+	fs[0].pass == false
+	fs[0].severity == "error"
+	fs[0].reasonCode == "prod.px.kubevirt.ocp_version.too_old"
 }
 
-# Data disk with physical=512 (supported but not recommended) → warning.
-test_vm_disk_blocksize_physical_512_fail if {
-	vms := [{
-		"name": "my-vm", "namespace": "vms",
-		"disks": [
-			{"name": "data-disk-1", "isRootDisk": false, "blockSizeLogical": 4096, "blockSizePhysical": 512},
-		],
-	}]
-	inp := _vm_only(vms)
+# OCP version unknown (empty string) → warning.
+test_ocp_version_unknown_warning if {
+	inp := _components_only({"ocpVersion": "", "osvVersion": "", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": ""})
 	findings := data.kvirtbp.cluster_findings with input as inp
-	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-vm-disk-blocksize"]
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-ocp-version"]
 	count(fs) == 1
 	fs[0].pass == false
 	fs[0].severity == "warning"
-	fs[0].reasonCode == "prod.px.kubevirt.vm_disk_blocksize.not_4k"
+	fs[0].reasonCode == "prod.px.kubevirt.ocp_version.unknown"
 }
 
-# Data disk with neither size set (both 0) → warning.
-test_vm_disk_blocksize_unset_fail if {
-	vms := [{
-		"name": "my-vm", "namespace": "vms",
-		"disks": [
-			{"name": "data-disk-1", "isRootDisk": false, "blockSizeLogical": 0, "blockSizePhysical": 0},
-		],
-	}]
-	inp := _vm_only(vms)
+# No collector data → OCP check skipped.
+test_ocp_version_no_collector_skip if {
+	findings := data.kvirtbp.cluster_findings with input as input_no_collector
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-ocp-version"]
+	count(fs) == 0
+}
+
+# ── Check 21: OSV version ──────────────────────────────────────────────────
+
+# Compliant OSV version (exactly 4.18.5, the minimum) → pass.
+test_osv_version_ok if {
+	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "4.18.5", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": ""})
 	findings := data.kvirtbp.cluster_findings with input as inp
-	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-vm-disk-blocksize"]
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-osv-version"]
+	count(fs) == 1
+	fs[0].pass == true
+	fs[0].severity == "info"
+	fs[0].reasonCode == "prod.px.kubevirt.osv_version.ok"
+}
+
+# OSV version 4.18.4 (not strictly > 4.18.4) → error.
+test_osv_version_too_old_fail if {
+	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "4.18.4", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": ""})
+	findings := data.kvirtbp.cluster_findings with input as inp
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-osv-version"]
 	count(fs) == 1
 	fs[0].pass == false
-	fs[0].severity == "warning"
+	fs[0].severity == "error"
+	fs[0].reasonCode == "prod.px.kubevirt.osv_version.too_old"
+}
+
+# OSV not installed (empty version) → check skipped.
+test_osv_version_not_installed_skip if {
+	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": ""})
+	findings := data.kvirtbp.cluster_findings with input as inp
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-osv-version"]
+	count(fs) == 0
+}
+
+# ── Check 22: MTV/Forklift version ────────────────────────────────────────
+
+# Compliant MTV version → pass.
+test_mtv_version_ok if {
+	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "", "mtvVersion": "2.10.5", "virtV2VVersion": "", "pxBackupVersion": ""})
+	findings := data.kvirtbp.cluster_findings with input as inp
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-mtv-version"]
+	count(fs) == 1
+	fs[0].pass == true
+	fs[0].severity == "info"
+	fs[0].reasonCode == "prod.px.kubevirt.mtv_version.ok"
+}
+
+# MTV version too old → error.
+test_mtv_version_too_old_fail if {
+	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "", "mtvVersion": "2.9.0", "virtV2VVersion": "", "pxBackupVersion": ""})
+	findings := data.kvirtbp.cluster_findings with input as inp
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-mtv-version"]
+	count(fs) == 1
+	fs[0].pass == false
+	fs[0].severity == "error"
+	fs[0].reasonCode == "prod.px.kubevirt.mtv_version.too_old"
+}
+
+# MTV not installed → skip.
+test_mtv_version_not_installed_skip if {
+	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": ""})
+	findings := data.kvirtbp.cluster_findings with input as inp
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-mtv-version"]
+	count(fs) == 0
+}
+
+# ── Check 23: virt-v2v version ────────────────────────────────────────────
+
+# Compliant virt-v2v version → pass.
+test_virtv2v_version_ok if {
+	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "", "mtvVersion": "2.10.5", "virtV2VVersion": "2.7.1", "pxBackupVersion": ""})
+	findings := data.kvirtbp.cluster_findings with input as inp
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-virtv2v-version"]
+	count(fs) == 1
+	fs[0].pass == true
+	fs[0].severity == "info"
+	fs[0].reasonCode == "prod.px.kubevirt.virtv2v_version.ok"
+}
+
+# virt-v2v version too old → error.
+test_virtv2v_version_too_old_fail if {
+	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "", "mtvVersion": "2.10.5", "virtV2VVersion": "2.6.0", "pxBackupVersion": ""})
+	findings := data.kvirtbp.cluster_findings with input as inp
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-virtv2v-version"]
+	count(fs) == 1
+	fs[0].pass == false
+	fs[0].severity == "error"
+	fs[0].reasonCode == "prod.px.kubevirt.virtv2v_version.too_old"
+}
+
+# virt-v2v version not set (MTV not installed / env var absent) → skip.
+test_virtv2v_version_not_installed_skip if {
+	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": ""})
+	findings := data.kvirtbp.cluster_findings with input as inp
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-virtv2v-version"]
+	count(fs) == 0
+}
+
+# ── Check 24: PX-Backup version ───────────────────────────────────────────
+
+# Compliant PX-Backup version → pass.
+test_pxbackup_version_ok if {
+	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": "2.10.2"})
+	findings := data.kvirtbp.cluster_findings with input as inp
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-pxbackup-version"]
+	count(fs) == 1
+	fs[0].pass == true
+	fs[0].severity == "info"
+	fs[0].reasonCode == "prod.px.kubevirt.pxbackup_version.ok"
+}
+
+# PX-Backup version too old → error.
+test_pxbackup_version_too_old_fail if {
+	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": "2.9.0"})
+	findings := data.kvirtbp.cluster_findings with input as inp
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-pxbackup-version"]
+	count(fs) == 1
+	fs[0].pass == false
+	fs[0].severity == "error"
+	fs[0].reasonCode == "prod.px.kubevirt.pxbackup_version.too_old"
+}
+
+# PX-Backup not installed → skip.
+test_pxbackup_version_not_installed_skip if {
+	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": ""})
+	findings := data.kvirtbp.cluster_findings with input as inp
+	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-pxbackup-version"]
+	count(fs) == 0
+}
+
+# Compliant fixture: all component checks pass.
+test_compliant_component_versions_all_pass if {
+	findings := data.kvirtbp.cluster_findings with input as input_compliant
+	component_check_ids := {
+		"prod-px-kubevirt-ocp-version",
+		"prod-px-kubevirt-osv-version",
+		"prod-px-kubevirt-mtv-version",
+		"prod-px-kubevirt-virtv2v-version",
+		"prod-px-kubevirt-pxbackup-version",
+	}
+	fs := [f | f := findings[_]; f.checkId in component_check_ids]
+	count(fs) == 5
+	count([f | f := fs[_]; f.pass == true]) == 5
 }
 
 # ---------------------------------------------------------------------------
