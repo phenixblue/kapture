@@ -219,7 +219,8 @@ def get(path):
         req = u.Request(BASE + path, headers={'Authorization': 'Bearer ' + tok})
         with u.urlopen(req, context=ctx) as r:
             return json.loads(r.read())
-    except:
+    except Exception as _e:
+        print('[get] ERROR {} {}'.format(path, _e), file=sys.stderr)
         return {'items': []}
 
 
@@ -306,6 +307,7 @@ pvcs = [
 # ── VirtualMachines ─────────────────────────────────────────────────────────────
 virtual_machines = []
 _vm_list = get('/apis/kubevirt.io/v1/virtualmachines')
+print('[vms] api returned {} items'.format(len(_vm_list.get('items', []))), file=sys.stderr)
 for _vm in _vm_list.get('items', []):
     _vm_disks = []
     _vm_spec = _vm.get('spec', {}).get('template', {}).get('spec', {})
@@ -325,6 +327,9 @@ for _vm in _vm_list.get('items', []):
             'blockSizeLogical':  _bs.get('logical', 0),
             'blockSizePhysical': _bs.get('physical', 0),
         })
+    print('[vms] {}/{} pvc_backed={} disk_count={}'.format(
+        _vm['metadata']['namespace'], _vm['metadata']['name'],
+        sorted(_pvc_backed), len(_vm_disks)), file=sys.stderr)
     virtual_machines.append({
         'name':      _vm['metadata']['name'],
         'namespace': _vm['metadata']['namespace'],
