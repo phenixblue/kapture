@@ -1,4 +1,4 @@
-package kvirtbp
+package kapture
 
 allowed_categories := {
 	"production-readiness",

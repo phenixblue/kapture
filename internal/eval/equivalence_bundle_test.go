@@ -5,10 +5,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/phenixblue/kvirtbp/internal/checks"
-	"github.com/phenixblue/kvirtbp/internal/eval"
-	"github.com/phenixblue/kvirtbp/internal/eval/goeval"
-	regoengine "github.com/phenixblue/kvirtbp/internal/eval/rego"
+	"github.com/phenixblue/kapture/internal/checks"
+	"github.com/phenixblue/kapture/internal/eval"
+	"github.com/phenixblue/kapture/internal/eval/goeval"
+	regoengine "github.com/phenixblue/kapture/internal/eval/rego"
 )
 
 type bundleEquivalenceCheck struct {

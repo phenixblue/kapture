@@ -1,6 +1,6 @@
 # Operations Guide
 
-This guide covers running `kvirtbp` in clusters, required RBAC, degraded-mode behavior, waivers, and troubleshooting.
+This guide covers running `kapture` in clusters, required RBAC, degraded-mode behavior, waivers, and troubleshooting.
 
 ## RBAC prerequisites
 
@@ -30,10 +30,10 @@ Typical two-step workflow:
 
 ```bash
 # Step 1: collect — writes collector-data.json
-./bin/kvirtbp collect --bundle ./policy/baseline --output collector-data.json
+./bin/kapture collect --bundle ./policy/baseline --output collector-data.json
 
 # Step 2: scan — injects collected data, makes no cluster writes
-./bin/kvirtbp scan --engine rego --policy-bundle ./policy/baseline \
+./bin/kapture scan --engine rego --policy-bundle ./policy/baseline \
     --collector-data collector-data.json
 ```
 
@@ -41,7 +41,7 @@ Key `collect` flags:
 
 - `--bundle` — loads collector definitions from a bundle's `metadata.json` automatically
 - `--collector-config` — path to a standalone JSON file of `[]CollectorConfig`; merged with bundle collectors (file wins on name collision)
-- `--collector-namespace` — Kubernetes namespace for Jobs (default: `kvirtbp-collectors`; created if absent)
+- `--collector-namespace` — Kubernetes namespace for Jobs (default: `kapture-collectors`; created if absent)
 - `--collector-timeout` — maximum time to wait for all collectors (default: `5m`)
 - `--no-collector-cleanup` — keep completed Jobs after collection (useful for debugging)
 - `--output` — path for the collector data JSON file (default: `collector-data.json`)
@@ -88,7 +88,7 @@ Waivers allow justified, visible exceptions for findings.
 Example waiver file:
 
 ```yaml
-apiVersion: kvirtbp/v1alpha1
+apiVersion: kapture/v1alpha1
 kind: WaiverList
 waivers:
   - checkId: sec-baseline-rbac-safety
@@ -100,7 +100,7 @@ waivers:
 Run with:
 
 ```bash
-./bin/kvirtbp scan --waiver-file ./waivers.yaml
+./bin/kapture scan --waiver-file ./waivers.yaml
 ```
 
 Waiver rules:
@@ -125,7 +125,7 @@ Waiver rules:
 - Namespace guardrail failures:
   - Add ResourceQuota and LimitRange to targeted namespaces.
 - Collector failures:
-  - Check Job status in the collector namespace: `kubectl get jobs -n kvirtbp-collectors`
+  - Check Job status in the collector namespace: `kubectl get jobs -n kapture-collectors`
   - Use `--no-collector-cleanup` to retain failed Jobs for log inspection.
   - Ensure the scanning identity has `batch/jobs` create/get/delete and `pods/log` get in the collector namespace.
 

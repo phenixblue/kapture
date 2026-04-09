@@ -3,8 +3,8 @@ package eval
 import (
 	"context"
 
-	"github.com/phenixblue/kvirtbp/internal/checks"
-	"github.com/phenixblue/kvirtbp/internal/kube"
+	"github.com/phenixblue/kapture/internal/checks"
+	"github.com/phenixblue/kapture/internal/kube"
 )
 
 type RunRequest struct {

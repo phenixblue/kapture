@@ -10,13 +10,13 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/phenixblue/kvirtbp/internal/kube"
+	"github.com/phenixblue/kapture/internal/kube"
 )
 
 // scriptConfigMapName returns the name of the ConfigMap that holds the
 // script files for a collector.
 func scriptConfigMapName(collectorName string) string {
-	return "kvirtbp-" + sanitizeName(collectorName) + "-scripts"
+	return "kapture-" + sanitizeName(collectorName) + "-scripts"
 }
 
 // scriptDataKey converts a script mount path to a valid ConfigMap data key.

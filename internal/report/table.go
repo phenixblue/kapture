@@ -8,7 +8,7 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 	ltable "github.com/charmbracelet/lipgloss/table"
-	"github.com/phenixblue/kvirtbp/internal/checks"
+	"github.com/phenixblue/kapture/internal/checks"
 )
 
 const msgWrapWidth = 120

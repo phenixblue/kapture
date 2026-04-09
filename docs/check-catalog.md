@@ -1,6 +1,6 @@
 # Check Catalog
 
-This catalog documents checks currently emitted by `kvirtbp scan`.
+This catalog documents checks currently emitted by `kapture scan`.
 
 ## Baseline aggregate checks
 
@@ -38,5 +38,5 @@ This catalog documents checks currently emitted by `kvirtbp scan`.
 
 - Severity may change at runtime based on evidence and degraded conditions.
 - Baseline aggregate checks consume preflight and permission signals and emit `reasonCode` values for machine processing.
-- Use `kvirtbp checks` for the current compiled control catalog and `kvirtbp scan --output json` for structured finding output.
+- Use `kapture checks` for the current compiled control catalog and `kapture scan --output json` for structured finding output.
 - Runbook details are in `docs/runbooks.md`.

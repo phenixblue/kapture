@@ -14,7 +14,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 
-	"github.com/phenixblue/kvirtbp/internal/kube"
+	"github.com/phenixblue/kapture/internal/kube"
 )
 
 const (
@@ -23,7 +23,7 @@ const (
 	// jobLabelKey is applied to every Job and its Pod template so they can be
 	// listed/cleaned up as a group.
 	jobLabelKey = "app.kubernetes.io/managed-by"
-	jobLabelVal = "kvirtbp-collector"
+	jobLabelVal = "kapture-collector"
 )
 
 // jobCollector is the default Collector implementation. It creates batch/v1
@@ -186,7 +186,7 @@ func (c *jobCollector) buildJob(jobName, nodeName, namespace, saName, cmName str
 
 	// Build the command list: mkdir for the output dir, user commands, then
 	// "cat <outputPath>".  The mkdir ensures the output directory exists even
-	// in minimal images (e.g. alpine) that don't ship /kvirtbp/.
+	// in minimal images (e.g. alpine) that don't ship /kapture/.
 	// The cat output is the only thing that appears as pod logs; user commands
 	// may write freely to stdout/stderr without polluting the JSON payload.
 	outputDir := path.Dir(outputPath)
@@ -349,7 +349,7 @@ func readJobLogs(ctx context.Context, clients *kube.Clients, namespace, jobName 
 // safeJobName builds a Kubernetes-safe Job name from the collector name and an
 // optional node name. Names are truncated to 63 characters if necessary.
 func safeJobName(collectorName, nodeName string) string {
-	base := "kvirtbp-" + sanitizeName(collectorName)
+	base := "kapture-" + sanitizeName(collectorName)
 	if nodeName != "" {
 		base = base + "-" + sanitizeName(nodeName)
 	}

@@ -3,7 +3,7 @@ package cli
 import (
 	"testing"
 
-	"github.com/phenixblue/kvirtbp/internal/checks"
+	"github.com/phenixblue/kapture/internal/checks"
 )
 
 func TestAnnotateRunbookHints(t *testing.T) {

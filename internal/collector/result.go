@@ -8,10 +8,10 @@ import (
 
 // CollectorMeta is embedded in the collector-data output file under the
 // reserved key "_meta". It carries provenance information that downstream
-// commands (e.g. "kvirtbp scan") can use to avoid re-fetching the bundle.
+// commands (e.g. "kapture scan") can use to avoid re-fetching the bundle.
 type CollectorMeta struct {
 	// BundlePaths are the local filesystem paths where bundles were saved by
-	// "kvirtbp collect --save-bundle". One entry per --bundle flag.
+	// "kapture collect --save-bundle". One entry per --bundle flag.
 	// Empty when --save-bundle was not used.
 	BundlePaths []string `json:"bundlePaths,omitempty"`
 

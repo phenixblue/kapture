@@ -8,7 +8,7 @@ import (
 
 func TestLoadWaivers_valid(t *testing.T) {
 	content := `
-apiVersion: kvirtbp/v1alpha1
+apiVersion: kapture/v1alpha1
 kind: WaiverList
 waivers:
   - checkId: sec-baseline-rbac-safety

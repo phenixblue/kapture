@@ -6,10 +6,10 @@ import (
 	"sort"
 	"testing"
 
-	"github.com/phenixblue/kvirtbp/internal/checks"
-	"github.com/phenixblue/kvirtbp/internal/eval"
-	regoengine "github.com/phenixblue/kvirtbp/internal/eval/rego"
-	"github.com/phenixblue/kvirtbp/internal/kube"
+	"github.com/phenixblue/kapture/internal/checks"
+	"github.com/phenixblue/kapture/internal/eval"
+	regoengine "github.com/phenixblue/kapture/internal/eval/rego"
+	"github.com/phenixblue/kapture/internal/kube"
 )
 
 func preflightPolicyPath(t *testing.T) string {

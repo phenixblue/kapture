@@ -1,4 +1,4 @@
-package kvirtbp
+package kapture
 
 # ---------------------------------------------------------------------------
 # cluster_test.rego — OPA unit tests for cluster.rego

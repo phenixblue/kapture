@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/phenixblue/kvirtbp/internal/checks"
-	"github.com/phenixblue/kvirtbp/internal/collector"
-	"github.com/phenixblue/kvirtbp/internal/eval"
-	"github.com/phenixblue/kvirtbp/internal/kube"
+	"github.com/phenixblue/kapture/internal/checks"
+	"github.com/phenixblue/kapture/internal/collector"
+	"github.com/phenixblue/kapture/internal/eval"
+	"github.com/phenixblue/kapture/internal/kube"
 )
 
 type stubCheck struct {
@@ -109,7 +109,7 @@ func TestEvaluateWithPolicyBundle(t *testing.T) {
 	engine := New()
 	tmp := t.TempDir()
 
-	policy := `package kvirtbp
+	policy := `package kapture
 
 findings := [{
   "checkId": "bundle-check",
@@ -139,7 +139,7 @@ func TestEvaluateWithInvalidFindingSeverity(t *testing.T) {
 	engine := New()
 	tmp := t.TempDir()
 
-	policy := `package kvirtbp
+	policy := `package kapture
 
 findings := [{
   "checkId": "bad",
@@ -221,7 +221,7 @@ func TestCollectorsFromBundle_WithCollectors(t *testing.T) {
 	meta := `{
 		"schemaVersion": "v1alpha1",
 		"collectors": [
-			{"name": "sysctl", "image": "alpine", "scope": "per-node", "commands": ["sysctl -a > /tmp/kvirtbp/output.json"]}
+			{"name": "sysctl", "image": "alpine", "scope": "per-node", "commands": ["sysctl -a > /tmp/kapture/output.json"]}
 		]
 	}`
 	if err := os.WriteFile(filepath.Join(tmp, "metadata.json"), []byte(meta), 0o644); err != nil {
@@ -271,7 +271,7 @@ func TestEvaluateWithCollectorData(t *testing.T) {
 
 	// Policy that inspects input.cluster.collectors and emits a passing finding
 	// when a specific sysctl value is present.
-	policy := `package kvirtbp
+	policy := `package kapture
 
 import rego.v1
 
@@ -329,7 +329,7 @@ func TestEvaluateWithCollectorData_MissingData(t *testing.T) {
 
 	// Policy that gracefully handles absent collector data by defaulting to "0".
 	// When no collector data is injected the pass condition must be false.
-	policy := `package kvirtbp
+	policy := `package kapture
 
 import rego.v1
 

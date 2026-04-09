@@ -6,7 +6,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/phenixblue/kvirtbp/internal/checks"
+	"github.com/phenixblue/kapture/internal/checks"
 )
 
 func TestWriteJSONIncludesMetadataSnapshot(t *testing.T) {

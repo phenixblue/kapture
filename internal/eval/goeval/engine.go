@@ -3,8 +3,8 @@ package goeval
 import (
 	"context"
 
-	"github.com/phenixblue/kvirtbp/internal/checks"
-	"github.com/phenixblue/kvirtbp/internal/eval"
+	"github.com/phenixblue/kapture/internal/checks"
+	"github.com/phenixblue/kapture/internal/eval"
 )
 
 type Engine struct{}

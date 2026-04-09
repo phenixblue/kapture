@@ -8,7 +8,7 @@
 #   Portworx-specific KubeVirt configuration data.
 #
 #   RBAC: apply rbac.yaml before running the collector. Pass the namespace
-#   to kvirtbp collect via --namespace kvirtbp-collectors.
+#   to kapture collect via --namespace kapture-collectors.
 #
 #   Collected data shape (input.cluster.collectors["portworx-kubevirt"]["_cluster"]):
 #   {
@@ -84,18 +84,18 @@
 #   kubectl apply -f examples/collectors/portworx-kubevirt/rbac.yaml
 #
 #   # Step 1: collect
-#   kvirtbp collect \
+#   kapture collect \
 #       --bundle ./examples/collectors/portworx-kubevirt \
-#       --namespace kvirtbp-collectors \
+#       --namespace kapture-collectors \
 #       --output portworx-kubevirt-data.json
 #
 #   # Step 2: scan
-#   kvirtbp scan --engine rego \
+#   kapture scan --engine rego \
 #       --policy-bundle ./examples/collectors/portworx-kubevirt \
 #       --collector-data portworx-kubevirt-data.json
 # ============================================================================
 
-package kvirtbp
+package kapture
 
 import rego.v1
 
@@ -156,8 +156,8 @@ collector_findings := [{
 	"severity":    "warning",
 	"pass":         false,
 	"reasonCode":  "prod.px.kubevirt.collector.absent",
-	"message":     "portworx-kubevirt collector data is absent; run 'kvirtbp collect' before scanning",
-	"remediation": "kubectl apply -f examples/collectors/portworx-kubevirt/rbac.yaml && kvirtbp collect --bundle ./examples/collectors/portworx-kubevirt --namespace kvirtbp-collectors --output portworx-kubevirt-data.json",
+	"message":     "portworx-kubevirt collector data is absent; run 'kapture collect' before scanning",
+	"remediation": "kubectl apply -f examples/collectors/portworx-kubevirt/rbac.yaml && kapture collect --bundle ./examples/collectors/portworx-kubevirt --namespace kapture-collectors --output portworx-kubevirt-data.json",
 }] if {
 	not collector_present
 }

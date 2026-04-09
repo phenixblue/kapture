@@ -11,15 +11,15 @@ import (
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/phenixblue/kvirtbp/internal/bundle"
-	"github.com/phenixblue/kvirtbp/internal/checks"
-	"github.com/phenixblue/kvirtbp/internal/collector"
-	"github.com/phenixblue/kvirtbp/internal/eval"
-	"github.com/phenixblue/kvirtbp/internal/eval/goeval"
-	regoengine "github.com/phenixblue/kvirtbp/internal/eval/rego"
-	"github.com/phenixblue/kvirtbp/internal/kube"
-	"github.com/phenixblue/kvirtbp/internal/report"
-	"github.com/phenixblue/kvirtbp/internal/runbook"
+	"github.com/phenixblue/kapture/internal/bundle"
+	"github.com/phenixblue/kapture/internal/checks"
+	"github.com/phenixblue/kapture/internal/collector"
+	"github.com/phenixblue/kapture/internal/eval"
+	"github.com/phenixblue/kapture/internal/eval/goeval"
+	regoengine "github.com/phenixblue/kapture/internal/eval/rego"
+	"github.com/phenixblue/kapture/internal/kube"
+	"github.com/phenixblue/kapture/internal/report"
+	"github.com/phenixblue/kapture/internal/runbook"
 	"github.com/spf13/cobra"
 )
 
@@ -304,10 +304,10 @@ func newScanCmd(outputFlag *string, kubeconfigPath *string, kubeContext *string,
 	cmd.Flags().BoolVar(&showRunbook, "show-runbook", false, "Append runbook hint for failing findings with remediation IDs")
 	cmd.Flags().StringVar(&waiverFile, "waiver-file", "", "Path to waiver YAML file (checks matching a waiver are skipped from failure counting)")
 	cmd.Flags().StringSliceVar(&resourceTypes, "resource", nil, "Additional Kubernetes resource types to fetch and expose to Rego as input.cluster.resources (format: VERSION/RESOURCE or GROUP/VERSION/RESOURCE, e.g. v1/configmaps,apps/v1/deployments)")
-	cmd.Flags().StringArrayVar(&collectorDataFiles, "collector-data", nil, "Path to a collector-data JSON file produced by 'kvirtbp collect' (repeatable; later files win on name collision). The _meta.bundlePath from the first file is used to auto-discover --policy-bundle.")
+	cmd.Flags().StringArrayVar(&collectorDataFiles, "collector-data", nil, "Path to a collector-data JSON file produced by 'kapture collect' (repeatable; later files win on name collision). The _meta.bundlePath from the first file is used to auto-discover --policy-bundle.")
 	cmd.Flags().StringArrayVar(&collectorBundles, "collector-bundle", nil, "Path or HTTPS URL to a bundle whose metadata.json declares collectors to run inline during scan (repeatable)")
 	cmd.Flags().StringArrayVar(&collectorConfigFiles, "collector-config", nil, "Path to a JSON file containing []CollectorConfig to run inline during scan (repeatable)")
-	cmd.Flags().StringVar(&collectorNamespace, "collector-namespace", "kvirtbp-collectors", "Kubernetes namespace for inline collector Jobs")
+	cmd.Flags().StringVar(&collectorNamespace, "collector-namespace", "kapture-collectors", "Kubernetes namespace for inline collector Jobs")
 	cmd.Flags().DurationVar(&collectorTimeout, "collector-timeout", 5*time.Minute, "Timeout for inline collector Jobs")
 	cmd.Flags().BoolVar(&noCollectorCleanup, "no-collector-cleanup", false, "Keep inline collector Jobs after scan (useful for debugging)")
 	cmd.Flags().BoolVar(&noAutoBundle, "no-auto-bundle", false, "Disable automatic policy bundle discovery from _meta.bundlePath in collector-data files")

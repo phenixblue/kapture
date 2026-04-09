@@ -31,19 +31,19 @@ KUBEVIRT_WAIT_TIMEOUT="${KUBEVIRT_WAIT_TIMEOUT:-20m}"
 VM_CONTAINERDISK_IMAGE="${VM_CONTAINERDISK_IMAGE:-quay.io/kubevirt/cirros-container-disk-demo:latest}"
 
 if [[ "$MODE" == "pass" ]]; then
-  CLUSTER_NAME="${CLUSTER_NAME:-kvirtbp-pass}"
+  CLUSTER_NAME="${CLUSTER_NAME:-kapture-pass}"
   KIND_CONFIG="$ROOT_DIR/scripts/kind/pass.yaml"
-  TARGET_NAMESPACE="${TARGET_NAMESPACE:-kvirtbp-pass-ns}"
+  TARGET_NAMESPACE="${TARGET_NAMESPACE:-kapture-pass-ns}"
 else
-  CLUSTER_NAME="${CLUSTER_NAME:-kvirtbp-fail}"
+  CLUSTER_NAME="${CLUSTER_NAME:-kapture-fail}"
   KIND_CONFIG="$ROOT_DIR/scripts/kind/fail.yaml"
-  TARGET_NAMESPACE="${TARGET_NAMESPACE:-kvirtbp-fail-ns}"
+  TARGET_NAMESPACE="${TARGET_NAMESPACE:-kapture-fail-ns}"
 fi
 
 KUBE_CONTEXT="kind-${CLUSTER_NAME}"
 
 log() {
-  echo "[kvirtbp-e2e] $*"
+  echo "[kapture-e2e] $*"
 }
 
 if [[ "$RECREATE_CLUSTER" == "true" ]]; then
@@ -255,7 +255,7 @@ log "Running scan (${SCAN_ENGINE}) against context ${KUBE_CONTEXT}"
 set +e
 (
   cd "$ROOT_DIR"
-  ./bin/kvirtbp scan \
+  ./bin/kapture scan \
     --engine "$SCAN_ENGINE" \
     --output table \
     --context "$KUBE_CONTEXT" \

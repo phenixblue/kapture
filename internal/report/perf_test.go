@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/phenixblue/kvirtbp/internal/checks"
+	"github.com/phenixblue/kapture/internal/checks"
 )
 
 // syntheticResult builds a RunResult with n findings spread across three

@@ -10,11 +10,11 @@ import (
 	"strings"
 
 	"github.com/open-policy-agent/opa/rego"
-	"github.com/phenixblue/kvirtbp/internal/checks"
-	"github.com/phenixblue/kvirtbp/internal/collector"
-	"github.com/phenixblue/kvirtbp/internal/eval"
-	"github.com/phenixblue/kvirtbp/internal/kube"
-	"github.com/phenixblue/kvirtbp/internal/version"
+	"github.com/phenixblue/kapture/internal/checks"
+	"github.com/phenixblue/kapture/internal/collector"
+	"github.com/phenixblue/kapture/internal/eval"
+	"github.com/phenixblue/kapture/internal/kube"
+	"github.com/phenixblue/kapture/internal/version"
 	"golang.org/x/mod/semver"
 )
 
@@ -46,7 +46,7 @@ func (e *Engine) Evaluate(ctx context.Context, req eval.RunRequest) (checks.RunR
 
 	input := makeInput(req.Registry, req.ClusterSnapshot)
 	regoArgs = append(regoArgs,
-		rego.Query("data.kvirtbp.findings"),
+		rego.Query("data.kapture.findings"),
 		rego.Input(input),
 	)
 	r := rego.New(regoArgs...)
@@ -86,7 +86,7 @@ func buildPolicyArgs(req eval.RunRequest) ([]func(*rego.Rego), []string, error) 
 	if err != nil {
 		return nil, nil, err
 	}
-	return []func(*rego.Rego){rego.Module("kvirtbp.rego", policyText)}, nil, nil
+	return []func(*rego.Rego){rego.Module("kapture.rego", policyText)}, nil, nil
 }
 
 func loadPolicy(path string) (string, error) {

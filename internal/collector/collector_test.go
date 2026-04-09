@@ -3,7 +3,7 @@ package collector_test
 import (
 	"testing"
 
-	"github.com/phenixblue/kvirtbp/internal/collector"
+	"github.com/phenixblue/kapture/internal/collector"
 )
 
 // ---- MergeCollectorConfigs ----
@@ -89,7 +89,7 @@ func TestMergeCollectorConfigs_PartialOverlap(t *testing.T) {
 func TestResolvedOutputPath_Default(t *testing.T) {
 	cfg := collector.CollectorConfig{}
 	got := cfg.ResolvedOutputPath()
-	want := "/tmp/kvirtbp/output.json"
+	want := "/tmp/kapture/output.json"
 	if got != want {
 		t.Fatalf("want %q, got %q", want, got)
 	}

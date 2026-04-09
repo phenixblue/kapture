@@ -9,12 +9,12 @@ set -euo pipefail
 #
 # The resulting cluster can be used to run the portworx-kubevirt collector:
 #
-#   kvirtbp collect \
+#   kapture collect \
 #     --bundle ./examples/collectors/portworx-kubevirt \
-#     --namespace kvirtbp-collectors \
+#     --namespace kapture-collectors \
 #     --output px-data.json
 #
-#   kvirtbp scan --engine rego \
+#   kapture scan --engine rego \
 #     --policy-bundle ./examples/collectors/portworx-kubevirt \
 #     --collector-data px-data.json
 #
@@ -35,7 +35,7 @@ set -euo pipefail
 #
 # Tunable environment variables (all have defaults)
 # -------------------------------------------------
-#   CLUSTER_NAME            kind cluster name           (kvirtbp-px-kubevirt)
+#   CLUSTER_NAME            kind cluster name           (kapture-px-kubevirt)
 #   KIND_CONFIG             path to kind cluster YAML   (scripts/kind/px-kubevirt.yaml)
 #   PX_VERSION              Portworx version            (3.1.3)
 #   PX_NAMESPACE            namespace for Portworx      (kube-system)
@@ -44,12 +44,12 @@ set -euo pipefail
 #   KUBEVIRT_TIMEOUT        KubeVirt readiness deadline (20m)
 #   RECREATE_CLUSTER        delete+recreate if present  (true)
 #   DISK_SIZE_GB            loop-disk size per worker   (20)
-#   VM_NAMESPACE            namespace for test VMs      (kvirtbp-px-vms)
+#   VM_NAMESPACE            namespace for test VMs      (kapture-px-vms)
 #   UNTAINT_CONTROL_PLANE   remove control-plane taint  (true)
 
 require_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then
-    echo "[kvirtbp-px-lab] missing required command: $1"
+    echo "[kapture-px-lab] missing required command: $1"
     exit 127
   fi
 }
@@ -65,17 +65,17 @@ require_cmd docker
 # hitting an opaque Rosetta ELF error.
 HOST_ARCH="$(uname -m)"
 if [[ "$HOST_ARCH" != "x86_64" ]]; then
-  echo "[kvirtbp-px-lab] ERROR: Portworx Enterprise requires an x86_64 host."
-  echo "[kvirtbp-px-lab]   Detected architecture: ${HOST_ARCH}"
-  echo "[kvirtbp-px-lab]   On Apple Silicon (M-series) there is no Rosetta workaround"
-  echo "[kvirtbp-px-lab]   because px-runc is executed via nsenter outside the"
-  echo "[kvirtbp-px-lab]   Docker emulation context."
-  echo "[kvirtbp-px-lab]   Run this script on an x86_64 Linux host or cloud VM."
+  echo "[kapture-px-lab] ERROR: Portworx Enterprise requires an x86_64 host."
+  echo "[kapture-px-lab]   Detected architecture: ${HOST_ARCH}"
+  echo "[kapture-px-lab]   On Apple Silicon (M-series) there is no Rosetta workaround"
+  echo "[kapture-px-lab]   because px-runc is executed via nsenter outside the"
+  echo "[kapture-px-lab]   Docker emulation context."
+  echo "[kapture-px-lab]   Run this script on an x86_64 Linux host or cloud VM."
   exit 1
 fi
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-CLUSTER_NAME="${CLUSTER_NAME:-kvirtbp-px-kubevirt}"
+CLUSTER_NAME="${CLUSTER_NAME:-kapture-px-kubevirt}"
 KIND_CONFIG="${KIND_CONFIG:-$ROOT_DIR/scripts/kind/px-kubevirt.yaml}"
 PX_VERSION="${PX_VERSION:-3.1.3}"
 # PX_OPERATOR_TAG is the libopenstorage/operator GitHub release tag used to
@@ -90,13 +90,13 @@ KUBEVIRT_VERSION="${KUBEVIRT_VERSION:-v1.2.2}"
 KUBEVIRT_TIMEOUT="${KUBEVIRT_TIMEOUT:-20m}"
 RECREATE_CLUSTER="${RECREATE_CLUSTER:-true}"
 DISK_SIZE_GB="${DISK_SIZE_GB:-20}"
-VM_NAMESPACE="${VM_NAMESPACE:-kvirtbp-px-vms}"
+VM_NAMESPACE="${VM_NAMESPACE:-kapture-px-vms}"
 UNTAINT_CONTROL_PLANE="${UNTAINT_CONTROL_PLANE:-true}"
 
 KUBE_CONTEXT="kind-${CLUSTER_NAME}"
 
 log() {
-  echo "[kvirtbp-px-lab] $*"
+  echo "[kapture-px-lab] $*"
 }
 
 # deadline_seconds converts a duration string like "30m" or "20m" into seconds.
@@ -449,12 +449,12 @@ done
 VM_IMAGE="${VM_IMAGE:-quay.io/kubevirt/cirros-container-disk-demo:latest}"
 
 for i in 1 2; do
-  log "Creating VirtualMachine: kvirtbp-vm-${i}"
+  log "Creating VirtualMachine: kapture-vm-${i}"
   cat <<EOF | kubectl --context "$KUBE_CONTEXT" apply -f -
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
-  name: kvirtbp-vm-${i}
+  name: kapture-vm-${i}
   namespace: ${VM_NAMESPACE}
   labels:
     portworx.io/app: kubevirt
@@ -463,7 +463,7 @@ spec:
   template:
     metadata:
       labels:
-        kubevirt.io/domain: kvirtbp-vm-${i}
+        kubevirt.io/domain: kapture-vm-${i}
         portworx.io/app: kubevirt
     spec:
       domain:
@@ -543,9 +543,9 @@ kubectl --context "$KUBE_CONTEXT" -n "$PX_NAMESPACE" get storagenodes -o wide 2>
 log ""
 log "To run the portworx-kubevirt collector against this cluster:"
 log "  export KUBECONFIG=\$(kind get kubeconfig-path --name ${CLUSTER_NAME} 2>/dev/null || echo \$HOME/.kube/config)"
-log "  kvirtbp collect \\"
+log "  kapture collect \\"
 log "    --bundle ./examples/collectors/portworx-kubevirt \\"
-log "    --namespace kvirtbp-collectors \\"
+log "    --namespace kapture-collectors \\"
 log "    --context ${KUBE_CONTEXT} \\"
 log "    --output px-data.json"
 log ""
