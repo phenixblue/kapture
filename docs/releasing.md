@@ -1,6 +1,6 @@
 # Release Process
 
-This document describes how to cut a versioned release of `kvirtbp`.
+This document describes how to cut a versioned release of `kapture`.
 
 Releases are fully automated via [GoReleaser](https://goreleaser.com/) and GitHub Actions. The only manual steps are preparing the changelog, tagging the commit, and pushing the tag.
 
@@ -8,7 +8,7 @@ Releases are fully automated via [GoReleaser](https://goreleaser.com/) and GitHu
 
 ## Prerequisites
 
-- Write access to the `phenixblue/kvirtbp` repository (push tags).
+- Write access to the `phenixblue/kapture` repository (push tags).
 - `git` and `gh` (GitHub CLI) installed locally.
 - Optionally `goreleaser` installed locally for dry-run validation.
 
@@ -16,7 +16,7 @@ Releases are fully automated via [GoReleaser](https://goreleaser.com/) and GitHu
 
 ## Versioning scheme
 
-`kvirtbp` uses [Semantic Versioning](https://semver.org/):
+`kapture` uses [Semantic Versioning](https://semver.org/):
 
 ```
 vMAJOR.MINOR.PATCH[-rcN]
@@ -91,7 +91,7 @@ Pushing the tag triggers the `release` GitHub Actions workflow, which:
 
 Once the workflow completes:
 
-1. Open the [Releases page](https://github.com/phenixblue/kvirtbp/releases) and confirm all assets are attached.
+1. Open the [Releases page](https://github.com/phenixblue/kapture/releases) and confirm all assets are attached.
 2. Check that `checksums.txt` and its `.sig`/`.pem` files are present.
 3. For a stable release, confirm the homebrew-tap PR was opened (or merged automatically).
 

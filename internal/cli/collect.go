@@ -13,10 +13,10 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/phenixblue/kvirtbp/internal/bundle"
-	"github.com/phenixblue/kvirtbp/internal/collector"
-	regoengine "github.com/phenixblue/kvirtbp/internal/eval/rego"
-	"github.com/phenixblue/kvirtbp/internal/kube"
+	"github.com/phenixblue/kapture/internal/bundle"
+	"github.com/phenixblue/kapture/internal/collector"
+	regoengine "github.com/phenixblue/kapture/internal/eval/rego"
+	"github.com/phenixblue/kapture/internal/kube"
 	"github.com/spf13/cobra"
 )
 
@@ -37,7 +37,7 @@ func newCollectCmd(kubeconfigPath *string, kubeContext *string) *cobra.Command {
 data that Rego policies can reference via input.cluster.collectors.
 
 The collected data is written to a JSON file (default: collector-data.json)
-that can be passed to 'kvirtbp scan --collector-data <file>'.`,
+that can be passed to 'kapture scan --collector-data <file>'.`,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			ctx, cancel := context.WithTimeout(cmd.Context(), collectorTimeout)
 			defer cancel()
@@ -129,7 +129,7 @@ that can be passed to 'kvirtbp scan --collector-data <file>'.`,
 	cmd.Flags().StringVar(&bundleSubdir, "bundle-subdir", "", "Subdirectory within the bundle archive that contains metadata.json (for monorepo layouts)")
 	cmd.Flags().StringVar(&saveBundle, "save-bundle", "", "Persist resolved bundle(s) to this path. Single bundle: saved directly. Multiple bundles: saved to <path>/bundle-0/, bundle-1/, …")
 	cmd.Flags().StringArrayVar(&collectorConfigFiles, "collector-config", nil, "Path to a JSON file containing []CollectorConfig (repeatable); merged after bundle configs, later files win")
-	cmd.Flags().StringVar(&collectorNamespace, "collector-namespace", "kvirtbp-collectors", "Kubernetes namespace for collector Jobs")
+	cmd.Flags().StringVar(&collectorNamespace, "collector-namespace", "kapture-collectors", "Kubernetes namespace for collector Jobs")
 	cmd.Flags().DurationVar(&collectorTimeout, "collector-timeout", 5*time.Minute, "Maximum time to wait for all collectors to finish")
 	cmd.Flags().BoolVar(&noCleanup, "no-collector-cleanup", false, "Keep collector Jobs after completion (useful for debugging)")
 	cmd.Flags().StringVar(&outputFile, "output", "collector-data.json", "Path to write the collector data JSON file")
@@ -189,7 +189,7 @@ func ensureNamespace(ctx context.Context, clients *kube.Clients, ns string) (boo
 		ObjectMeta: metav1.ObjectMeta{
 			Name: ns,
 			Labels: map[string]string{
-				"app.kubernetes.io/managed-by": "kvirtbp",
+				"app.kubernetes.io/managed-by": "kapture",
 			},
 		},
 	}

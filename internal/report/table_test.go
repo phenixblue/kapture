@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/phenixblue/kvirtbp/internal/checks"
+	"github.com/phenixblue/kapture/internal/checks"
 )
 
 func TestWriteTableIncludesSummaryAndTriage(t *testing.T) {

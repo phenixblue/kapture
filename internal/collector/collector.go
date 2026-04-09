@@ -4,7 +4,7 @@ import (
 	"context"
 	"time"
 
-	"github.com/phenixblue/kvirtbp/internal/kube"
+	"github.com/phenixblue/kapture/internal/kube"
 )
 
 // RunOptions are passed to each Collector at execution time.

@@ -1,4 +1,4 @@
-package kvirtbp_test
+package kapture_test
 
 import rego.v1
 
@@ -296,7 +296,7 @@ input_pvc_filesystem := {
 # ---------------------------------------------------------------------------
 
 test_no_cluster_findings_empty if {
-	findings := data.kvirtbp.findings with input as input_no_cluster
+	findings := data.kapture.findings with input as input_no_cluster
 	count(findings) == 0
 }
 
@@ -305,7 +305,7 @@ test_no_cluster_findings_empty if {
 # ---------------------------------------------------------------------------
 
 test_collector_present_pass if {
-	findings := data.kvirtbp.findings with input as input_compliant
+	findings := data.kapture.findings with input as input_compliant
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-collector-present"]
 	count(fs) == 1
 	fs[0].pass == true
@@ -313,7 +313,7 @@ test_collector_present_pass if {
 }
 
 test_collector_absent_fail if {
-	findings := data.kvirtbp.findings with input as input_no_collector
+	findings := data.kapture.findings with input as input_no_collector
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-collector-present"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -325,7 +325,7 @@ test_collector_absent_fail if {
 # ---------------------------------------------------------------------------
 
 test_storageclasses_exist_pass if {
-	findings := data.kvirtbp.findings with input as input_compliant
+	findings := data.kapture.findings with input as input_compliant
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-storageclasses-exist"]
 	count(fs) == 1
 	fs[0].pass == true
@@ -346,7 +346,7 @@ test_storageclasses_exist_fail if {
 			},
 		},
 	}
-	findings := data.kvirtbp.findings with input as inp
+	findings := data.kapture.findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-storageclasses-exist"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -358,14 +358,14 @@ test_storageclasses_exist_fail if {
 # ---------------------------------------------------------------------------
 
 test_replication_ok if {
-	findings := data.kvirtbp.findings with input as input_compliant
+	findings := data.kapture.findings with input as input_compliant
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-replication"]
 	count(fs) == 1
 	fs[0].pass == true
 }
 
 test_replication_low_fail if {
-	findings := data.kvirtbp.findings with input as input_low_repl
+	findings := data.kapture.findings with input as input_low_repl
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-replication"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -377,14 +377,14 @@ test_replication_low_fail if {
 # ---------------------------------------------------------------------------
 
 test_binding_mode_ok if {
-	findings := data.kvirtbp.findings with input as input_compliant
+	findings := data.kapture.findings with input as input_compliant
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-binding-mode"]
 	count(fs) == 1
 	fs[0].pass == true
 }
 
 test_binding_mode_immediate_fail if {
-	findings := data.kvirtbp.findings with input as input_wrong_binding
+	findings := data.kapture.findings with input as input_wrong_binding
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-binding-mode"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -396,14 +396,14 @@ test_binding_mode_immediate_fail if {
 # ---------------------------------------------------------------------------
 
 test_volume_expansion_ok if {
-	findings := data.kvirtbp.findings with input as input_compliant
+	findings := data.kapture.findings with input as input_compliant
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-volume-expansion"]
 	count(fs) == 1
 	fs[0].pass == true
 }
 
 test_volume_expansion_disabled_fail if {
-	findings := data.kvirtbp.findings with input as input_no_expansion
+	findings := data.kapture.findings with input as input_no_expansion
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-volume-expansion"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -415,14 +415,14 @@ test_volume_expansion_disabled_fail if {
 # ---------------------------------------------------------------------------
 
 test_nodiscard_ok if {
-	findings := data.kvirtbp.findings with input as input_compliant
+	findings := data.kapture.findings with input as input_compliant
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-nodiscard"]
 	count(fs) == 1
 	fs[0].pass == true
 }
 
 test_nodiscard_missing_fail if {
-	findings := data.kvirtbp.findings with input as input_missing_nodiscard
+	findings := data.kapture.findings with input as input_missing_nodiscard
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-nodiscard"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -432,7 +432,7 @@ test_nodiscard_missing_fail if {
 # Non-RWX StorageClasses do not trigger the nodiscard check.
 test_nodiscard_not_applicable if {
 	# input_low_repl has sharedv4=false — no nodiscard findings expected.
-	findings := data.kvirtbp.findings with input as input_low_repl
+	findings := data.kapture.findings with input as input_low_repl
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-nodiscard"]
 	count(fs) == 0
 }
@@ -442,14 +442,14 @@ test_nodiscard_not_applicable if {
 # ---------------------------------------------------------------------------
 
 test_storageprofile_block_rwx_ok if {
-	findings := data.kvirtbp.findings with input as input_compliant
+	findings := data.kapture.findings with input as input_compliant
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-storageprofile-block"]
 	count(fs) == 1
 	fs[0].pass == true
 }
 
 test_storageprofile_block_rwx_fail if {
-	findings := data.kvirtbp.findings with input as input_bad_storageprofile
+	findings := data.kapture.findings with input as input_bad_storageprofile
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-storageprofile-block"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -461,14 +461,14 @@ test_storageprofile_block_rwx_fail if {
 # ---------------------------------------------------------------------------
 
 test_pvc_rwx_ok if {
-	findings := data.kvirtbp.findings with input as input_compliant
+	findings := data.kapture.findings with input as input_compliant
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-pvc-rwx"]
 	count(fs) == 1
 	fs[0].pass == true
 }
 
 test_pvc_rwo_fail if {
-	findings := data.kvirtbp.findings with input as input_pvc_rwo
+	findings := data.kapture.findings with input as input_pvc_rwo
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-pvc-rwx"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -480,14 +480,14 @@ test_pvc_rwo_fail if {
 # ---------------------------------------------------------------------------
 
 test_pvc_block_ok if {
-	findings := data.kvirtbp.findings with input as input_compliant
+	findings := data.kapture.findings with input as input_compliant
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-pvc-block"]
 	count(fs) == 1
 	fs[0].pass == true
 }
 
 test_pvc_filesystem_fail if {
-	findings := data.kvirtbp.findings with input as input_pvc_filesystem
+	findings := data.kapture.findings with input as input_pvc_filesystem
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-pvc-block"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -499,7 +499,7 @@ test_pvc_filesystem_fail if {
 # ---------------------------------------------------------------------------
 
 test_compliant_all_pass if {
-	findings := data.kvirtbp.findings with input as input_compliant
+	findings := data.kapture.findings with input as input_compliant
 	every f in findings {
 		f.pass == true
 	}
@@ -558,7 +558,7 @@ input_unknown_px_version := {
 }
 
 test_px_version_ok if {
-	findings := data.kvirtbp.findings with input as input_compliant
+	findings := data.kapture.findings with input as input_compliant
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-px-version"]
 	count(fs) == 1
 	fs[0].pass == true
@@ -566,7 +566,7 @@ test_px_version_ok if {
 }
 
 test_px_version_too_old_fail if {
-	findings := data.kvirtbp.findings with input as input_old_px_version
+	findings := data.kapture.findings with input as input_old_px_version
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-px-version"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -574,7 +574,7 @@ test_px_version_too_old_fail if {
 }
 
 test_px_version_unknown_fail if {
-	findings := data.kvirtbp.findings with input as input_unknown_px_version
+	findings := data.kapture.findings with input as input_unknown_px_version
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-px-version"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -609,7 +609,7 @@ input_old_operator_version := {
 }
 
 test_operator_version_ok if {
-	findings := data.kvirtbp.findings with input as input_compliant
+	findings := data.kapture.findings with input as input_compliant
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-operator-version"]
 	count(fs) == 1
 	fs[0].pass == true
@@ -617,7 +617,7 @@ test_operator_version_ok if {
 }
 
 test_operator_version_too_old_fail if {
-	findings := data.kvirtbp.findings with input as input_old_operator_version
+	findings := data.kapture.findings with input as input_old_operator_version
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-operator-version"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -675,7 +675,7 @@ input_stork_not_configured := {
 }
 
 test_stork_version_ok if {
-	findings := data.kvirtbp.findings with input as input_compliant
+	findings := data.kapture.findings with input as input_compliant
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-stork-version"]
 	count(fs) == 1
 	fs[0].pass == true
@@ -683,7 +683,7 @@ test_stork_version_ok if {
 }
 
 test_stork_version_too_old_fail if {
-	findings := data.kvirtbp.findings with input as input_old_stork_version
+	findings := data.kapture.findings with input as input_old_stork_version
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-stork-version"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -691,7 +691,7 @@ test_stork_version_too_old_fail if {
 }
 
 test_stork_not_configured_pass if {
-	findings := data.kvirtbp.findings with input as input_stork_not_configured
+	findings := data.kapture.findings with input as input_stork_not_configured
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-stork-version"]
 	count(fs) == 1
 	fs[0].pass == true
@@ -704,33 +704,33 @@ test_stork_not_configured_pass if {
 
 # Exact minimum boundary — should pass
 test_version_exact_minimum if {
-	data.kvirtbp.version_gte("3.3.0", "3.3.0")
+	data.kapture.version_gte("3.3.0", "3.3.0")
 }
 
 # Minor version bump — should pass
 test_version_minor_bump if {
-	data.kvirtbp.version_gte("3.10.0", "3.3.0")
+	data.kapture.version_gte("3.10.0", "3.3.0")
 }
 
 # Patch version below — should fail
 test_version_patch_below if {
-	not data.kvirtbp.version_gte("3.3.0", "3.3.1")
+	not data.kapture.version_gte("3.3.0", "3.3.1")
 }
 
 # Major version below — should fail
 test_version_major_below if {
-	not data.kvirtbp.version_gte("2.9.9", "3.0.0")
+	not data.kapture.version_gte("2.9.9", "3.0.0")
 }
 
 # Pre-release suffix (e.g. -rc1) must not cause the check to fail when the
 # numeric version satisfies the minimum.
 test_version_prerelease_pass if {
-	data.kvirtbp.version_gte("3.6.0-rc1", "3.3.0")
+	data.kapture.version_gte("3.6.0-rc1", "3.3.0")
 }
 
 # Pre-release patch that is numerically below minimum should still fail.
 test_version_prerelease_fail if {
-	not data.kvirtbp.version_gte("3.2.9-rc1", "3.3.0")
+	not data.kapture.version_gte("3.2.9-rc1", "3.3.0")
 }
 
 # ===========================================================================
@@ -798,7 +798,7 @@ _good_pxctl := {
 # ---------------------------------------------------------------------------
 
 test_cluster_status_ok if {
-	findings := data.kvirtbp.cluster_findings with input as input_compliant
+	findings := data.kapture.cluster_findings with input as input_compliant
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-cluster-status"]
 	count(fs) == 1
 	fs[0].pass == true
@@ -807,7 +807,7 @@ test_cluster_status_ok if {
 
 test_cluster_status_fail if {
 	inp := _pxctl_only(object.union(_good_pxctl, {"clusterStatus": "STATUS_NOT_OK"}))
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-cluster-status"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -817,7 +817,7 @@ test_cluster_status_fail if {
 
 test_cluster_status_pxctl_unavailable if {
 	inp := _pxctl_only({"_error": "pod_not_found"})
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-cluster-status"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -830,7 +830,7 @@ test_cluster_status_pxctl_unavailable if {
 # ---------------------------------------------------------------------------
 
 test_license_ok if {
-	findings := data.kvirtbp.cluster_findings with input as input_compliant
+	findings := data.kapture.cluster_findings with input as input_compliant
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-license-expiry"]
 	count(fs) == 1
 	fs[0].pass == true
@@ -842,7 +842,7 @@ test_license_permanent if {
 		"license":              "PX-Enterprise permanent",
 		"licenseDaysRemaining": 99999,
 	}))
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-license-expiry"]
 	count(fs) == 1
 	fs[0].pass == true
@@ -854,7 +854,7 @@ test_license_expiring_soon_fail if {
 		"license":              "PX-Enterprise (expires in 15 days)",
 		"licenseDaysRemaining": 15,
 	}))
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-license-expiry"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -867,7 +867,7 @@ test_license_expired_fail if {
 		"license":              "PX-Enterprise (expired)",
 		"licenseDaysRemaining": 0,
 	}))
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-license-expiry"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -880,7 +880,7 @@ test_license_expired_fail if {
 # ---------------------------------------------------------------------------
 
 test_global_pool_ok if {
-	findings := data.kvirtbp.cluster_findings with input as input_compliant
+	findings := data.kapture.cluster_findings with input as input_compliant
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-global-pool-free"]
 	count(fs) == 1
 	fs[0].pass == true
@@ -892,7 +892,7 @@ test_global_pool_low_fail if {
 		"globalTotalBytes": 1000,
 		"globalUsedBytes":  850,
 	}))
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-global-pool-free"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -906,7 +906,7 @@ test_global_pool_boundary_pass if {
 		"globalTotalBytes": 100,
 		"globalUsedBytes":  80,
 	}))
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-global-pool-free"]
 	count(fs) == 1
 	fs[0].pass == true
@@ -917,7 +917,7 @@ test_global_pool_boundary_pass if {
 # ---------------------------------------------------------------------------
 
 test_local_pool_ok if {
-	findings := data.kvirtbp.cluster_findings with input as input_compliant
+	findings := data.kapture.cluster_findings with input as input_compliant
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-local-pool-free"]
 	count(fs) == 1
 	fs[0].pass == true
@@ -936,7 +936,7 @@ test_local_pool_low_fail if {
 		},
 	]})
 	inp := _pxctl_only(ps)
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-local-pool-free"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -948,7 +948,7 @@ test_local_pool_low_fail if {
 # ---------------------------------------------------------------------------
 
 test_storev2_metadata_ok if {
-	findings := data.kvirtbp.cluster_findings with input as input_compliant
+	findings := data.kapture.cluster_findings with input as input_compliant
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-storev2-metadata"]
 	count(fs) == 1
 	fs[0].pass == true
@@ -968,7 +968,7 @@ test_storev2_metadata_undersized_fail if {
 		},
 	]})
 	inp := _pxctl_only(ps)
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-storev2-metadata"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -980,7 +980,7 @@ test_storev2_metadata_undersized_fail if {
 test_storev2_not_in_use_skip if {
 	ps := object.union(_good_pxctl, {"storev2": false})
 	inp := _pxctl_only(ps)
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-storev2-metadata"]
 	count(fs) == 1
 	fs[0].pass == true
@@ -1000,7 +1000,7 @@ test_storev2_metadata_absent_fail if {
 		},
 	]})
 	inp := _pxctl_only(ps)
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-storev2-metadata"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -1012,7 +1012,7 @@ test_storev2_metadata_absent_fail if {
 # ---------------------------------------------------------------------------
 
 test_node_health_ok if {
-	findings := data.kvirtbp.cluster_findings with input as input_compliant
+	findings := data.kapture.cluster_findings with input as input_compliant
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-node-health"]
 	count(fs) == 1
 	fs[0].pass == true
@@ -1032,7 +1032,7 @@ test_node_health_offline_fail if {
 		},
 	]})
 	inp := _pxctl_only(ps)
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-node-health"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -1053,7 +1053,7 @@ test_node_health_storage_down_fail if {
 		},
 	]})
 	inp := _pxctl_only(ps)
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-node-health"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -1087,7 +1087,7 @@ _components_only(cv) := {
 # Compliant OCP version → pass info.
 test_ocp_version_ok if {
 	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": ""})
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-ocp-version"]
 	count(fs) == 1
 	fs[0].pass == true
@@ -1098,7 +1098,7 @@ test_ocp_version_ok if {
 # OCP version newer than minimum → pass.
 test_ocp_version_newer_ok if {
 	inp := _components_only({"ocpVersion": "4.19.0", "osvVersion": "", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": ""})
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-ocp-version"]
 	count(fs) == 1
 	fs[0].pass == true
@@ -1107,7 +1107,7 @@ test_ocp_version_newer_ok if {
 # OCP version too old → error.
 test_ocp_version_too_old_fail if {
 	inp := _components_only({"ocpVersion": "4.18.10", "osvVersion": "", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": ""})
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-ocp-version"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -1118,14 +1118,14 @@ test_ocp_version_too_old_fail if {
 # OCP version empty (non-OCP cluster or CRD unavailable) → check skipped.
 test_ocp_version_not_ocp_skip if {
 	inp := _components_only({"ocpVersion": "", "osvVersion": "", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": ""})
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-ocp-version"]
 	count(fs) == 0
 }
 
 # No collector data → OCP check skipped.
 test_ocp_version_no_collector_skip if {
-	findings := data.kvirtbp.cluster_findings with input as input_no_collector
+	findings := data.kapture.cluster_findings with input as input_no_collector
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-ocp-version"]
 	count(fs) == 0
 }
@@ -1135,7 +1135,7 @@ test_ocp_version_no_collector_skip if {
 # Compliant OSV version (exactly 4.18.5, the minimum) → pass.
 test_osv_version_ok if {
 	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "4.18.5", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": ""})
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-osv-version"]
 	count(fs) == 1
 	fs[0].pass == true
@@ -1146,7 +1146,7 @@ test_osv_version_ok if {
 # OSV version 4.18.4 (not strictly > 4.18.4) → error.
 test_osv_version_too_old_fail if {
 	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "4.18.4", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": ""})
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-osv-version"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -1157,7 +1157,7 @@ test_osv_version_too_old_fail if {
 # OSV not installed (empty version) → check skipped.
 test_osv_version_not_installed_skip if {
 	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": ""})
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-osv-version"]
 	count(fs) == 0
 }
@@ -1167,7 +1167,7 @@ test_osv_version_not_installed_skip if {
 # Compliant MTV version → pass.
 test_mtv_version_ok if {
 	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "", "mtvVersion": "2.10.5", "virtV2VVersion": "", "pxBackupVersion": ""})
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-mtv-version"]
 	count(fs) == 1
 	fs[0].pass == true
@@ -1178,7 +1178,7 @@ test_mtv_version_ok if {
 # MTV version too old → error.
 test_mtv_version_too_old_fail if {
 	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "", "mtvVersion": "2.9.0", "virtV2VVersion": "", "pxBackupVersion": ""})
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-mtv-version"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -1189,7 +1189,7 @@ test_mtv_version_too_old_fail if {
 # MTV not installed → skip.
 test_mtv_version_not_installed_skip if {
 	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": ""})
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-mtv-version"]
 	count(fs) == 0
 }
@@ -1199,7 +1199,7 @@ test_mtv_version_not_installed_skip if {
 # Compliant virt-v2v version → pass.
 test_virtv2v_version_ok if {
 	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "", "mtvVersion": "2.10.5", "virtV2VVersion": "2.7.1", "pxBackupVersion": ""})
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-virtv2v-version"]
 	count(fs) == 1
 	fs[0].pass == true
@@ -1210,7 +1210,7 @@ test_virtv2v_version_ok if {
 # virt-v2v version too old → error.
 test_virtv2v_version_too_old_fail if {
 	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "", "mtvVersion": "2.10.5", "virtV2VVersion": "2.6.0", "pxBackupVersion": ""})
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-virtv2v-version"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -1221,7 +1221,7 @@ test_virtv2v_version_too_old_fail if {
 # virt-v2v version not set (MTV not installed / env var absent) → skip.
 test_virtv2v_version_not_installed_skip if {
 	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": ""})
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-virtv2v-version"]
 	count(fs) == 0
 }
@@ -1231,7 +1231,7 @@ test_virtv2v_version_not_installed_skip if {
 # Compliant PX-Backup version → pass.
 test_pxbackup_version_ok if {
 	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": "2.10.2"})
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-pxbackup-version"]
 	count(fs) == 1
 	fs[0].pass == true
@@ -1242,7 +1242,7 @@ test_pxbackup_version_ok if {
 # PX-Backup version too old → error.
 test_pxbackup_version_too_old_fail if {
 	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": "2.9.0"})
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-pxbackup-version"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -1253,14 +1253,14 @@ test_pxbackup_version_too_old_fail if {
 # PX-Backup not installed → skip.
 test_pxbackup_version_not_installed_skip if {
 	inp := _components_only({"ocpVersion": "4.18.33", "osvVersion": "", "mtvVersion": "", "virtV2VVersion": "", "pxBackupVersion": ""})
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-pxbackup-version"]
 	count(fs) == 0
 }
 
 # Compliant fixture: all component checks pass.
 test_compliant_component_versions_all_pass if {
-	findings := data.kvirtbp.cluster_findings with input as input_compliant
+	findings := data.kapture.cluster_findings with input as input_compliant
 	component_check_ids := {
 		"prod-px-kubevirt-ocp-version",
 		"prod-px-kubevirt-osv-version",
@@ -1287,7 +1287,7 @@ test_vm_disk_blocksize_ok if {
 		],
 	}]
 	inp := _vm_only(vms)
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-vm-disk-blocksize"]
 	count(fs) == 1
 	fs[0].pass == true
@@ -1298,7 +1298,7 @@ test_vm_disk_blocksize_ok if {
 # No VMs at all → check is skipped (no finding emitted).
 test_vm_disk_blocksize_no_vms_skip if {
 	inp := _vm_only([])
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-vm-disk-blocksize"]
 	count(fs) == 0
 }
@@ -1312,7 +1312,7 @@ test_vm_disk_blocksize_only_root_skip if {
 		],
 	}]
 	inp := _vm_only(vms)
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-vm-disk-blocksize"]
 	count(fs) == 0
 }
@@ -1326,7 +1326,7 @@ test_vm_disk_blocksize_physical_512_fail if {
 		],
 	}]
 	inp := _vm_only(vms)
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-vm-disk-blocksize"]
 	count(fs) == 1
 	fs[0].pass == false
@@ -1343,7 +1343,7 @@ test_vm_disk_blocksize_unset_fail if {
 		],
 	}]
 	inp := _vm_only(vms)
-	findings := data.kvirtbp.cluster_findings with input as inp
+	findings := data.kapture.cluster_findings with input as inp
 	fs := [f | f := findings[_]; f.checkId == "prod-px-kubevirt-vm-disk-blocksize"]
 	count(fs) == 1
 	fs[0].pass == false

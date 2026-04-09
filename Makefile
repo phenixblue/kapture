@@ -1,4 +1,4 @@
-BINARY ?= kvirtbp
+BINARY ?= kapture
 
 .PHONY: tidy
 tidy:
@@ -24,7 +24,7 @@ test-report-contract:
 .PHONY: build
 build:
 	mkdir -p bin
-	go build -o bin/$(BINARY) ./cmd/kvirtbp
+	go build -o bin/$(BINARY) ./cmd/kapture
 
 .PHONY: e2e-kind-pass
 e2e-kind-pass:
@@ -95,7 +95,7 @@ lab-px-kubevirt:
 # Override CLUSTER_NAME to match a non-default cluster name.
 .PHONY: lab-px-kubevirt-teardown
 lab-px-kubevirt-teardown:
-	kind delete cluster --name "$${CLUSTER_NAME:-kvirtbp-px-kubevirt}"
+	kind delete cluster --name "$${CLUSTER_NAME:-kapture-px-kubevirt}"
 
 # lab-k3s-kubevirt stands up a k3d (k3s-in-Docker) cluster with Portworx
 # Enterprise, KubeVirt, and two small VMs backed by Portworx ReadWriteMany
@@ -120,4 +120,4 @@ lab-k3s-kubevirt:
 # Override CLUSTER_NAME to match a non-default cluster name.
 .PHONY: lab-k3s-kubevirt-teardown
 lab-k3s-kubevirt-teardown:
-	k3d cluster delete "$${CLUSTER_NAME:-kvirtbp-k3s-kubevirt}"
+	k3d cluster delete "$${CLUSTER_NAME:-kapture-k3s-kubevirt}"

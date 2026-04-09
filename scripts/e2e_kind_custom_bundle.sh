@@ -25,14 +25,14 @@ require_cmd kubectl
 require_cmd make
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-CLUSTER_NAME="${CLUSTER_NAME:-kvirtbp-custom-bundle}"
+CLUSTER_NAME="${CLUSTER_NAME:-kapture-custom-bundle}"
 RECREATE_CLUSTER="${RECREATE_CLUSTER:-true}"
 KUBE_CONTEXT="kind-${CLUSTER_NAME}"
-TARGET_NAMESPACE="${TARGET_NAMESPACE:-kvirtbp-custom-ns}"
+TARGET_NAMESPACE="${TARGET_NAMESPACE:-kapture-custom-ns}"
 BUNDLE_PATH="./test/fixtures/custom-bundle"
 
 log() {
-  echo "[kvirtbp-e2e-custom-bundle] $*"
+  echo "[kapture-e2e-custom-bundle] $*"
 }
 
 # --------------------------------------------------------------------------
@@ -60,14 +60,14 @@ kubectl --context "$KUBE_CONTEXT" create namespace "$TARGET_NAMESPACE" \
   --dry-run=client -o yaml | kubectl --context "$KUBE_CONTEXT" apply -f -
 
 if [[ "$MODE" == "pass" ]]; then
-  log "Pass mode: creating ConfigMap 'kvirtbp-e2e-marker' in $TARGET_NAMESPACE"
-  kubectl --context "$KUBE_CONTEXT" create configmap kvirtbp-e2e-marker \
+  log "Pass mode: creating ConfigMap 'kapture-e2e-marker' in $TARGET_NAMESPACE"
+  kubectl --context "$KUBE_CONTEXT" create configmap kapture-e2e-marker \
     --namespace "$TARGET_NAMESPACE" \
-    --from-literal=marker=kvirtbp-e2e \
+    --from-literal=marker=kapture-e2e \
     --dry-run=client -o yaml | kubectl --context "$KUBE_CONTEXT" apply -f -
 else
-  log "Fail mode: ensuring ConfigMap 'kvirtbp-e2e-marker' is absent"
-  kubectl --context "$KUBE_CONTEXT" delete configmap kvirtbp-e2e-marker \
+  log "Fail mode: ensuring ConfigMap 'kapture-e2e-marker' is absent"
+  kubectl --context "$KUBE_CONTEXT" delete configmap kapture-e2e-marker \
     --namespace "$TARGET_NAMESPACE" --ignore-not-found
 fi
 
@@ -85,7 +85,7 @@ log "Running scan (rego + custom bundle) against context ${KUBE_CONTEXT}"
 set +e
 (
   cd "$ROOT_DIR"
-  ./bin/kvirtbp scan \
+  ./bin/kapture scan \
     --engine rego \
     --bundle "$BUNDLE_PATH" \
     --output table \

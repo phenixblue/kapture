@@ -38,7 +38,7 @@ func Resolve(ctx context.Context, rawPath, subdir string) (dir string, cleanup f
 		return rawPath, noop, nil
 	}
 
-	tmpDir, err := os.MkdirTemp("", "kvirtbp-bundle-*")
+	tmpDir, err := os.MkdirTemp("", "kapture-bundle-*")
 	if err != nil {
 		return "", noop, fmt.Errorf("create temp dir: %w", err)
 	}
@@ -88,7 +88,7 @@ func fetchAndUnpack(ctx context.Context, rawURL, destDir string) error {
 	if err != nil {
 		return fmt.Errorf("build request: %w", err)
 	}
-	req.Header.Set("User-Agent", "kvirtbp")
+	req.Header.Set("User-Agent", "kapture")
 
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

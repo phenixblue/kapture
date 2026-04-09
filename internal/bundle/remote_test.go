@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/phenixblue/kvirtbp/internal/bundle"
+	"github.com/phenixblue/kapture/internal/bundle"
 )
 
 // buildTarGz writes a minimal .tar.gz archive containing the given files
@@ -110,7 +110,7 @@ func TestResolve_LocalPath_WithSubdir(t *testing.T) {
 func TestResolve_RemoteTarball_FlatRoot(t *testing.T) {
 	archivePath := buildTarGz(t, "", map[string]string{
 		"metadata.json": `{"schemaVersion":"v1alpha1"}`,
-		"policy.rego":   `package kvirtbp`,
+		"policy.rego":   `package kapture`,
 	})
 	srv := serveFile(t, archivePath)
 	defer srv.Close()
@@ -132,7 +132,7 @@ func TestResolve_RemoteTarball_FlatRoot(t *testing.T) {
 func TestResolve_RemoteTarball_GitHubStyleTopDir(t *testing.T) {
 	archivePath := buildTarGz(t, "my-repo-v1.0.0", map[string]string{
 		"metadata.json": `{"schemaVersion":"v1alpha1"}`,
-		"policy.rego":   `package kvirtbp`,
+		"policy.rego":   `package kapture`,
 	})
 	srv := serveFile(t, archivePath)
 	defer srv.Close()
@@ -152,7 +152,7 @@ func TestResolve_RemoteTarball_GitHubStyleTopDir(t *testing.T) {
 func TestResolve_RemoteTarball_WithSubdir(t *testing.T) {
 	archivePath := buildTarGz(t, "my-repo-v1.0.0", map[string]string{
 		"policy/baseline/metadata.json": `{"schemaVersion":"v1alpha1"}`,
-		"policy/baseline/policy.rego":   `package kvirtbp`,
+		"policy/baseline/policy.rego":   `package kapture`,
 	})
 	srv := serveFile(t, archivePath)
 	defer srv.Close()
@@ -236,7 +236,7 @@ func TestResolve_CleanupDeletesTempDir(t *testing.T) {
 	parent := filepath.Dir(dir)
 	if _, statErr := os.Stat(parent); statErr == nil {
 		// parent may legitimately still exist if it is the OS temp dir itself;
-		// check that the specific kvirtbp-bundle-* dir is gone.
+		// check that the specific kapture-bundle-* dir is gone.
 		if _, statErr2 := os.Stat(dir); statErr2 == nil {
 			t.Errorf("expected temp dir %q to be deleted after cleanup", dir)
 		}

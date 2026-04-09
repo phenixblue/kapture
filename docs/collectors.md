@@ -1,11 +1,11 @@
 # Collectors Guide
 
-Collectors are short-lived Kubernetes Jobs deployed by `kvirtbp collect` to gather node or cluster-scope data that Rego policies can reference at scan time via `input.cluster.collectors`.
+Collectors are short-lived Kubernetes Jobs deployed by `kapture collect` to gather node or cluster-scope data that Rego policies can reference at scan time via `input.cluster.collectors`.
 
 ## How it works
 
 ```
-kvirtbp collect                  kvirtbp scan --collector-data ...
+kapture collect                  kapture scan --collector-data ...
       │                                       │
       ▼                                       ▼
 Deploy Jobs on cluster          Load collector-data.json
@@ -26,24 +26,24 @@ Write collector-data.json
 
 ```bash
 # Run collectors declared in a local policy bundle
-./bin/kvirtbp collect --bundle ./policy/baseline --output collector-data.json
+./bin/kapture collect --bundle ./policy/baseline --output collector-data.json
 
 # Run collectors from a remote bundle (HTTPS .tar.gz)
-./bin/kvirtbp collect \
+./bin/kapture collect \
     --bundle https://github.com/myorg/policies/archive/refs/tags/v1.2.0.tar.gz \
     --output collector-data.json
 
 # Monorepo: bundle lives under a subdirectory of the archive
-./bin/kvirtbp collect \
+./bin/kapture collect \
     --bundle https://github.com/myorg/policies/archive/refs/tags/v1.2.0.tar.gz \
     --bundle-subdir policy/kubevirt \
     --output collector-data.json
 
 # Or from a standalone collector config file
-./bin/kvirtbp collect --collector-config ./my-collectors.json --output collector-data.json
+./bin/kapture collect --collector-config ./my-collectors.json --output collector-data.json
 
 # Then scan with the collected data
-./bin/kvirtbp scan --engine rego --policy-bundle ./policy/baseline \
+./bin/kapture scan --engine rego --policy-bundle ./policy/baseline \
     --collector-data collector-data.json
 ```
 
@@ -57,7 +57,7 @@ Collectors are declared as JSON objects. The schema maps to `collector.Collector
 | `image` | string | yes | Container image to run |
 | `commands` | []string | yes | Shell commands to execute inside the container |
 | `scope` | string | no | `"once"` (default) or `"per-node"` |
-| `outputPath` | string | no | In-pod path where commands write JSON output (default: `/tmp/kvirtbp/output.json`) |
+| `outputPath` | string | no | In-pod path where commands write JSON output (default: `/tmp/kapture/output.json`) |
 | `timeoutSeconds` | int | no | Per-collector deadline in seconds; `0` means use the global `--collector-timeout` cap |
 | `privileged` | bool | no | Run container with `SecurityContext.Privileged = true` |
 | `hostPID` | bool | no | Mount host PID namespace |
@@ -74,7 +74,7 @@ Collectors are declared as JSON objects. The schema maps to `collector.Collector
 
 ## Output format
 
-`kvirtbp collect` writes a JSON file with the structure:
+`kapture collect` writes a JSON file with the structure:
 
 ```json
 {
@@ -115,14 +115,14 @@ If a collector (or individual node) fails, an `_error` key is stored in place of
 ```json
 {
   "sysctl": {
-    "worker-1": { "_error": "job kvirtbp-sysctl-worker-1 failed: BackoffLimitExceeded" }
+    "worker-1": { "_error": "job kapture-sysctl-worker-1 failed: BackoffLimitExceeded" }
   }
 }
 ```
 
 ## Writing collector output
 
-Commands must write valid JSON to `outputPath` (default `/tmp/kvirtbp/output.json`). The CLI appends `cat <outputPath>` as the last command in the Job spec — this is what appears as pod logs and is parsed as JSON.
+Commands must write valid JSON to `outputPath` (default `/tmp/kapture/output.json`). The CLI appends `cat <outputPath>` as the last command in the Job spec — this is what appears as pod logs and is parsed as JSON.
 
 Intermediate commands may freely write to stdout/stderr without corrupting the output payload since they run before the final `cat`.
 
@@ -131,14 +131,14 @@ Example pattern for a sysctl collector:
 ```bash
 # write JSON to the output path, then let the CLI's appended "cat" emit it
 commands:
-  - "sysctl -a --pattern '^(net\\.ipv4\\.ip_forward|net\\.bridge\\.bridge-nf-call-iptables)' | awk 'BEGIN{printf \"{\"} {printf \"%s\\\"%s\\\": \\\"%s\\\"%s\", NR>1?\",\":\" \", $1, $3} END{print \"}\"}'  > /tmp/kvirtbp/output.json"
+  - "sysctl -a --pattern '^(net\\.ipv4\\.ip_forward|net\\.bridge\\.bridge-nf-call-iptables)' | awk 'BEGIN{printf \"{\"} {printf \"%s\\\"%s\\\": \\\"%s\\\"%s\", NR>1?\",\":\" \", $1, $3} END{print \"}\"}'  > /tmp/kapture/output.json"
 ```
 
 Or with a helper image that already produces JSON:
 
 ```bash
 commands:
-  - "my-tool dump-json > /tmp/kvirtbp/output.json"
+  - "my-tool dump-json > /tmp/kapture/output.json"
 ```
 
 ## Declaring collectors in a bundle
@@ -156,7 +156,7 @@ Add a `collectors` array to the bundle's `metadata.json`:
       "image": "alpine:3.21",
       "commands": [
         "apk add -q procps",
-        "sysctl -a --pattern '^net\\.ipv4\\.ip_forward' | awk 'BEGIN{printf \"{\"}{printf \"\\\"%s\\\":\\\"%s\\\"\", $1,$3}END{print \"}\"}'  > /tmp/kvirtbp/output.json"
+        "sysctl -a --pattern '^net\\.ipv4\\.ip_forward' | awk 'BEGIN{printf \"{\"}{printf \"\\\"%s\\\":\\\"%s\\\"\", $1,$3}END{print \"}\"}'  > /tmp/kapture/output.json"
       ],
       "scope": "per-node",
       "privileged": true,
@@ -166,14 +166,14 @@ Add a `collectors` array to the bundle's `metadata.json`:
 }
 ```
 
-Running `kvirtbp collect --bundle ./policy/baseline` will execute these collectors automatically.
+Running `kapture collect --bundle ./policy/baseline` will execute these collectors automatically.
 
 ## Merging collector configs
 
 When both `--bundle` and `--collector-config` are provided, the two sets are merged. `--collector-config` wins on name collision:
 
 ```bash
-./bin/kvirtbp collect \
+./bin/kapture collect \
     --bundle ./policy/baseline \
     --collector-config ./overrides.json \
     --output collector-data.json
@@ -183,7 +183,7 @@ When both `--bundle` and `--collector-config` are provided, the two sets are mer
 
 ## RBAC requirements
 
-The identity running `kvirtbp collect` needs:
+The identity running `kapture collect` needs:
 
 ```yaml
 rules:
@@ -208,20 +208,20 @@ If `--collector-namespace` already exists, the `namespaces` create verb is not r
 Use `--no-collector-cleanup` to prevent Job deletion after completion:
 
 ```bash
-./bin/kvirtbp collect --bundle ./policy/baseline \
+./bin/kapture collect --bundle ./policy/baseline \
     --no-collector-cleanup --output collector-data.json
 ```
 
 Then inspect failed Jobs directly:
 
 ```bash
-kubectl get jobs -n kvirtbp-collectors
-kubectl logs -n kvirtbp-collectors -l collector-name=sysctl
+kubectl get jobs -n kapture-collectors
+kubectl logs -n kapture-collectors -l collector-name=sysctl
 ```
 
 ## Security considerations
 
 - `privileged`, `hostPID`, and `hostNetwork` must be explicitly opted into per collector; they are never defaulted.
-- The collector namespace (`kvirtbp-collectors` by default) should have a restrictive PSA policy. Consider `enforce: privileged` only if your collectors require host access, and scope the namespace RBAC tightly.
+- The collector namespace (`kapture-collectors` by default) should have a restrictive PSA policy. Consider `enforce: privileged` only if your collectors require host access, and scope the namespace RBAC tightly.
 - Collector `env` values are stored in plain text in the Job spec. Do not use them for secrets; use a Kubernetes Secret volume mount instead.
 - The output file (`collector-data.json`) may contain sensitive node data. Treat it with appropriate access controls.

@@ -16,9 +16,9 @@ type Config struct {
 	ExcludeChecks []string
 }
 
-const defaultConfigContent = `# kvirtbp configuration file
-# All values can also be set via environment variables prefixed with KVIRTBP_
-# e.g. KVIRTBP_OUTPUT=json
+const defaultConfigContent = `# kapture configuration file
+# All values can also be set via environment variables prefixed with KAPTURE_
+# e.g. KAPTURE_OUTPUT=json
 
 # Output format: table|json
 output: table
@@ -33,13 +33,13 @@ engine: go
 exclude_checks: []
 `
 
-// defaultConfigPath returns $HOME/.config/kvirtbp/kvirtbp.yaml.
+// defaultConfigPath returns $HOME/.config/kapture/kapture.yaml.
 func defaultConfigPath() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(home, ".config", "kvirtbp", "config.yaml"), nil
+	return filepath.Join(home, ".config", "kapture", "config.yaml"), nil
 }
 
 // ensureDefaultConfig silently creates the default config file if neither the
@@ -58,15 +58,15 @@ func ensureDefaultConfig() {
 
 // Load reads configuration from (in priority order):
 //  1. The explicit path provided by the caller (--config flag)
-//  2. ./kvirtbp.yaml in the current working directory
-//  3. $HOME/.config/kvirtbp/config.yaml
+//  2. ./kapture.yaml in the current working directory
+//  3. $HOME/.config/kapture/config.yaml
 //
 // If no config file is found and no explicit path was given, a default config
-// file is created at $HOME/.config/kvirtbp/config.yaml silently.
-// All values can be overridden via KVIRTBP_* environment variables.
+// file is created at $HOME/.config/kapture/config.yaml silently.
+// All values can be overridden via KAPTURE_* environment variables.
 func Load(path string) (Config, error) {
 	v := viper.New()
-	v.SetEnvPrefix("KVIRTBP")
+	v.SetEnvPrefix("KAPTURE")
 	v.AutomaticEnv()
 
 	v.SetDefault("output", "table")
@@ -84,7 +84,7 @@ func Load(path string) (Config, error) {
 		v.SetConfigType("yaml")
 		v.AddConfigPath(".")
 		if home, err := os.UserHomeDir(); err == nil {
-			v.AddConfigPath(filepath.Join(home, ".config", "kvirtbp"))
+			v.AddConfigPath(filepath.Join(home, ".config", "kapture"))
 		}
 		if err := v.ReadInConfig(); err != nil {
 			// No config file found anywhere — generate the default one silently.

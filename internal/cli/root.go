@@ -4,8 +4,8 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/phenixblue/kvirtbp/internal/config"
-	"github.com/phenixblue/kvirtbp/internal/version"
+	"github.com/phenixblue/kapture/internal/config"
+	"github.com/phenixblue/kapture/internal/version"
 	"github.com/spf13/cobra"
 )
 
@@ -16,9 +16,9 @@ func NewRootCmd() *cobra.Command {
 	var kubeContext string
 
 	root := &cobra.Command{
-		Use:   "kvirtbp",
+		Use:   "kapture",
 		Short: "KubeVirt best-practices scanner",
-		Long:  "kvirtbp scans Kubernetes clusters with KubeVirt for production-readiness, security, and availability best practices.",
+		Long:  "kapture scans Kubernetes clusters with KubeVirt for production-readiness, security, and availability best practices.",
 		PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 			if outputFlag != "" && outputFlag != "table" && outputFlag != "json" {
 				return errors.New("--output must be one of: table, json")

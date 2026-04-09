@@ -4,7 +4,7 @@
 #
 # Collector: "node-info" (scope: per-node)
 #   Runs one Job per node using alpine:3.21.  Each Job writes the node's
-#   kernel version and CPU architecture to /tmp/kvirtbp/output.json with a
+#   kernel version and CPU architecture to /tmp/kapture/output.json with a
 #   single printf command — no extra packages required.
 #
 #   Collected data shape (input.cluster.collectors["node-info"]):
@@ -15,23 +15,23 @@
 #
 # Usage:
 #   # Step 1: collect
-#   kvirtbp collect --bundle ./examples/collectors/node-info --output collector-data.json
+#   kapture collect --bundle ./examples/collectors/node-info --output collector-data.json
 #
 #   # Step 2: scan
-#   kvirtbp scan --engine rego \
+#   kapture scan --engine rego \
 #       --policy-bundle ./examples/collectors/node-info \
 #       --collector-data collector-data.json
 #
 #   # Or from a tagged GitHub release in a single step:
 #   BUNDLE=https://github.com/myorg/policies/archive/refs/tags/v1.0.0.tar.gz
-#   kvirtbp collect --bundle $BUNDLE --bundle-subdir examples/collectors/node-info \
+#   kapture collect --bundle $BUNDLE --bundle-subdir examples/collectors/node-info \
 #       --output collector-data.json
-#   kvirtbp scan --engine rego --policy-bundle $BUNDLE \
+#   kapture scan --engine rego --policy-bundle $BUNDLE \
 #       --bundle-subdir examples/collectors/node-info \
 #       --collector-data collector-data.json
 # ============================================================================
 
-package kvirtbp
+package kapture
 
 # ---------------------------------------------------------------------------
 # Short-circuit: no cluster snapshot present (unit tests / dry-run).
@@ -86,7 +86,7 @@ arch_mixed {
 # Check 1: collector data is present
 #
 # This check acts as a pre-condition gate: if the user forgot to run
-# 'kvirtbp collect' it fails loudly so subsequent checks can be skipped
+# 'kapture collect' it fails loudly so subsequent checks can be skipped
 # rather than silently producing vacuous pass results.
 # ---------------------------------------------------------------------------
 
@@ -110,8 +110,8 @@ collector_findings := [{
 	"severity":   "warning",
 	"pass":       false,
 	"reasonCode": "prod.collector.node-info.absent",
-	"message":    "node-info collector data is absent; run 'kvirtbp collect' before scanning",
-	"remediation": "kvirtbp collect --bundle ./examples/collectors/node-info --output collector-data.json",
+	"message":    "node-info collector data is absent; run 'kapture collect' before scanning",
+	"remediation": "kapture collect --bundle ./examples/collectors/node-info --output collector-data.json",
 }] {
 	not collector_data_present
 }

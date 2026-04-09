@@ -1,6 +1,6 @@
 # Homebrew Usage
 
-`kvirtbp` is distributed via a Homebrew tap for macOS and Linux users.
+`kapture` is distributed via a Homebrew tap for macOS and Linux users.
 
 ## Install
 
@@ -8,32 +8,32 @@ Add the tap and install:
 
 ```bash
 brew tap phenixblue/tap
-brew install kvirtbp
+brew install kapture
 ```
 
 Verify:
 
 ```bash
-kvirtbp version
+kapture version
 ```
 
 ## Upgrade
 
 ```bash
 brew update
-brew upgrade kvirtbp
+brew upgrade kapture
 ```
 
 Or upgrade only the tap formulae:
 
 ```bash
-brew upgrade phenixblue/tap/kvirtbp
+brew upgrade phenixblue/tap/kapture
 ```
 
 ## Uninstall
 
 ```bash
-brew uninstall kvirtbp
+brew uninstall kapture
 ```
 
 To also remove the tap:
@@ -47,18 +47,18 @@ brew untap phenixblue/tap
 Prevent a release from being upgraded automatically:
 
 ```bash
-brew pin kvirtbp
+brew pin kapture
 ```
 
 To unpin later:
 
 ```bash
-brew unpin kvirtbp
+brew unpin kapture
 ```
 
 ## Install a specific release
 
-Homebrew formulae track the latest release in the tap. To install a specific version, download the archive directly from the [GitHub Releases](https://github.com/phenixblue/kvirtbp/releases) page and use `go install` or extract the binary manually.
+Homebrew formulae track the latest release in the tap. To install a specific version, download the archive directly from the [GitHub Releases](https://github.com/phenixblue/kapture/releases) page and use `go install` or extract the binary manually.
 
 ## Verify release integrity
 
@@ -66,8 +66,8 @@ Each release ships a `checksums.txt` and per-archive SBOM. To verify a downloade
 
 ```bash
 # Download the archive and checksum file from the GitHub release
-curl -LO https://github.com/phenixblue/kvirtbp/releases/download/v0.1.0/kvirtbp_Darwin_arm64.tar.gz
-curl -LO https://github.com/phenixblue/kvirtbp/releases/download/v0.1.0/checksums.txt
+curl -LO https://github.com/phenixblue/kapture/releases/download/v0.1.0/kapture_Darwin_arm64.tar.gz
+curl -LO https://github.com/phenixblue/kapture/releases/download/v0.1.0/checksums.txt
 
 # Verify the archive against the checksum
 sha256sum --check --ignore-missing checksums.txt
@@ -77,7 +77,7 @@ Cosign is used to sign `checksums.txt` in CI. To verify the signature:
 
 ```bash
 cosign verify-blob \
-  --certificate-identity-regexp "https://github.com/phenixblue/kvirtbp/.github/workflows/release.yml" \
+  --certificate-identity-regexp "https://github.com/phenixblue/kapture/.github/workflows/release.yml" \
   --certificate-oidc-issuer "https://token.actions.githubusercontent.com" \
   --signature checksums.txt.sig \
   checksums.txt

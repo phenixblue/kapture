@@ -5,5 +5,5 @@
   "version": "0.1.0",
   "category": "preflight",
   "engine": "rego",
-  "entrypoint": "data.kvirtbp.findings"
+  "entrypoint": "data.kapture.findings"
 }

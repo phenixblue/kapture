@@ -1,4 +1,4 @@
-package kvirtbp
+package kapture
 
 # ---------------------------------------------------------------------------
 # catalog_test.rego — OPA unit tests for catalog.rego

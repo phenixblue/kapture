@@ -1,4 +1,4 @@
-package kvirtbp
+package kapture
 
 # Custom e2e policy bundle: checks that a specific ConfigMap exists in the cluster.
 # The "resources" field in metadata.json tells the scanner to fetch v1/configmaps
@@ -8,7 +8,7 @@ package kvirtbp
 # NOTE: resource type strings must use the plural API resource name as it appears
 # in the Kubernetes REST path (e.g. "configmaps", "deployments", "virtualmachines").
 
-required_name := "kvirtbp-e2e-marker"
+required_name := "kapture-e2e-marker"
 
 # No cluster snapshot (unit-test / catalog-only mode) → no cluster findings.
 findings = [] {
@@ -27,7 +27,7 @@ findings = f {
 		"category": "production-readiness",
 		"severity": "info",
 		"pass":     true,
-		"message":  "Required ConfigMap 'kvirtbp-e2e-marker' found in cluster.",
+		"message":  "Required ConfigMap 'kapture-e2e-marker' found in cluster.",
 	}]
 }
 
@@ -43,7 +43,7 @@ findings = f {
 		"category":    "production-readiness",
 		"severity":    "warning",
 		"pass":        false,
-		"message":     "Required ConfigMap 'kvirtbp-e2e-marker' not found in cluster.",
-		"remediation": "Create a ConfigMap named 'kvirtbp-e2e-marker' in any namespace.",
+		"message":     "Required ConfigMap 'kapture-e2e-marker' not found in cluster.",
+		"remediation": "Create a ConfigMap named 'kapture-e2e-marker' in any namespace.",
 	}]
 }

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/phenixblue/kvirtbp/internal/cli"
+	"github.com/phenixblue/kapture/internal/cli"
 )
 
 func main() {

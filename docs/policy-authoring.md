@@ -1,10 +1,10 @@
 # Policy Authoring Guide
 
-This guide explains how to extend `kvirtbp` with Rego policies and equivalent Go checks.
+This guide explains how to extend `kapture` with Rego policies and equivalent Go checks.
 
 ## Evaluator model
 
-`kvirtbp` supports two evaluators:
+`kapture` supports two evaluators:
 
 - `go`: built-in checks compiled into the binary.
 - `rego`: policies loaded from a Rego file (`--policy-file`) or bundle directory (`--policy-bundle`).
@@ -12,14 +12,14 @@ This guide explains how to extend `kvirtbp` with Rego policies and equivalent Go
 Command examples:
 
 ```bash
-./bin/kvirtbp scan --engine go
-./bin/kvirtbp scan --engine rego --policy-file ./policy/custom.rego
-./bin/kvirtbp scan --engine rego --policy-bundle ./policy/baseline
+./bin/kapture scan --engine go
+./bin/kapture scan --engine rego --policy-file ./policy/custom.rego
+./bin/kapture scan --engine rego --policy-bundle ./policy/baseline
 ```
 
 ## Rego output contract
 
-The Rego evaluator expects `data.kvirtbp.findings` to produce an array of finding objects.
+The Rego evaluator expects `data.kapture.findings` to produce an array of finding objects.
 
 Required fields per finding:
 
@@ -66,14 +66,14 @@ What the Rego engine does instead is evaluate the **check catalog** — the set 
 
 There is no `input.namespaces`, `input.nodes`, or `input.networkPolicies`. If you want to enforce policy against live cluster resources, write a Go check in `internal/kube/preflight.go` using the Kubernetes client.
 
-Your Rego policy reads from `input.checks` and writes to `data.kvirtbp.findings`. Those findings are merged with the cluster findings from step 2 before being reported.
+Your Rego policy reads from `input.checks` and writes to `data.kapture.findings`. Those findings are merged with the cluster findings from step 2 before being reported.
 
 ## Single-check example
 
 The smallest useful policy adds one catalog-level finding: assert that a specific control is registered before the cluster evaluation runs. This can act as a compliance gate — fail the scan if a required check was accidentally removed from the binary.
 
 ```rego
-package kvirtbp
+package kapture
 
 # Assert that the network-policy coverage check is registered.
 # If it is missing, the whole scan should be treated as a violation.
@@ -100,7 +100,7 @@ findings := [finding |
 Run it:
 
 ```bash
-./bin/kvirtbp scan --engine rego --policy-file ./policy/required-controls.rego --output table
+./bin/kapture scan --engine rego --policy-file ./policy/required-controls.rego --output table
 ```
 
 ## Full policy example
@@ -110,10 +110,10 @@ The example below is a complete required-control-set policy that mirrors what a 
 1. Asserts that mandatory check IDs are present in the catalog.
 2. Enforces a minimum number of checks per category.
 3. Emits a pass finding for each requirement that is satisfied.
-4. Combines all findings into the required `data.kvirtbp.findings` entrypoint.
+4. Combines all findings into the required `data.kapture.findings` entrypoint.
 
 ```rego
-package kvirtbp
+package kapture
 
 # ---------------------------------------------------------------------------
 # Required check IDs — these must always be present in the catalog.
@@ -226,7 +226,7 @@ category_coverage_fail_findings := findings {
 }
 
 # ---------------------------------------------------------------------------
-# Combined result — required entrypoint: data.kvirtbp.findings
+# Combined result — required entrypoint: data.kapture.findings
 # ---------------------------------------------------------------------------
 
 findings := array.concat(
@@ -245,11 +245,11 @@ findings := array.concat(
 | `checks_in_category(cat)` | Helper rule returning the count of checks for a category |
 | `count < cat_min` | Integer comparison — Rego evaluates this as a condition |
 | Named partial arrays (`required_check_findings`, etc.) | Each rule produces an independent slice; `array.concat` merges them into `findings` |
-| `findings` entrypoint | Must be `data.kvirtbp.findings`; the engine reads exactly this path |
+| `findings` entrypoint | Must be `data.kapture.findings`; the engine reads exactly this path |
 
 ## Accessing collector data in Rego
 
-Collector output is injected into `input.cluster.collectors` when `--collector-data <file>` is passed to `scan`. The structure mirrors the file produced by `kvirtbp collect`:
+Collector output is injected into `input.cluster.collectors` when `--collector-data <file>` is passed to `scan`. The structure mirrors the file produced by `kapture collect`:
 
 ```
 input.cluster.collectors["<collector-name>"]["<node-name-or-_cluster>"]["<key>"] = "<value>"
@@ -261,7 +261,7 @@ input.cluster.collectors["<collector-name>"]["<node-name-or-_cluster>"]["<key>"]
 Example policy reading a sysctl value:
 
 ```rego
-package kvirtbp
+package kapture
 
 import rego.v1
 
@@ -323,7 +323,7 @@ Example:
 - `schemaVersion` (currently `v1alpha1`)
 - `policyVersion` (informational)
 - `minBinaryVersion` (optional)
-- `collectors` (optional) — array of `CollectorConfig` objects run automatically by `kvirtbp collect --bundle`; their output is injected into `input.cluster.collectors` at scan time
+- `collectors` (optional) — array of `CollectorConfig` objects run automatically by `kapture collect --bundle`; their output is injected into `input.cluster.collectors` at scan time
 
 See [docs/collectors.md](docs/collectors.md) for the full `CollectorConfig` schema and collector authoring guide.
 
@@ -353,7 +353,7 @@ If you add Go checks:
 
 ```bash
 make test
-./bin/kvirtbp scan --engine rego --policy-bundle ./policy/baseline --output json
+./bin/kapture scan --engine rego --policy-bundle ./policy/baseline --output json
 ```
 
 For evaluator parity work, use existing equivalence tests under `internal/eval` as reference.

@@ -1,4 +1,4 @@
-module github.com/phenixblue/kvirtbp
+module github.com/phenixblue/kapture
 
 go 1.25.0
 

@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/phenixblue/kvirtbp/internal/checks"
+	"github.com/phenixblue/kapture/internal/checks"
 	"github.com/spf13/cobra"
 )
 

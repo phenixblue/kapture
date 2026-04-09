@@ -1,7 +1,7 @@
 apiVersion: k3d.io/v1alpha5
 kind: Simple
 metadata:
-  name: kvirtbp-k3s-kubevirt
+  name: kapture-k3s-kubevirt
 # ARCHITECTURE: x86_64 (amd64) ONLY.
 # Portworx px-runc is an x86_64 binary. Cannot run under Rosetta 2 on
 # Apple Silicon because oci-monitor execs it via nsenter outside the Docker

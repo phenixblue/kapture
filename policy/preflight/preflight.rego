@@ -1,4 +1,4 @@
-package kvirtbp
+package kapture
 
 # ---------------------------------------------------------------------------
 # Helpers — namespace filtering
@@ -786,7 +786,7 @@ all_permission_findings := array.concat(
 )
 
 # ---------------------------------------------------------------------------
-# Required entrypoint: data.kvirtbp.findings
+# Required entrypoint: data.kapture.findings
 # ---------------------------------------------------------------------------
 
 findings := array.concat(

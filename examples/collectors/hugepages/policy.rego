@@ -28,21 +28,21 @@
 #
 # Usage:
 #   # Step 1: collect
-#   kvirtbp collect --bundle ./examples/collectors/hugepages --output collector-data.json
+#   kapture collect --bundle ./examples/collectors/hugepages --output collector-data.json
 #
 #   # Step 2: scan
-#   kvirtbp scan --engine rego \
+#   kapture scan --engine rego \
 #       --policy-bundle ./examples/collectors/hugepages \
 #       --collector-data collector-data.json
 #
 #   # Combine with node-info in a single collect run — scan remains separate per bundle:
-#   kvirtbp collect \
+#   kapture collect \
 #       --bundle ./examples/collectors/node-info \
 #       --bundle ./examples/collectors/hugepages \
 #       --output collector-data.json
 # ============================================================================
 
-package kvirtbp
+package kapture
 
 # ---------------------------------------------------------------------------
 # Short-circuit: no cluster snapshot present (unit tests / dry-run).
@@ -129,8 +129,8 @@ collector_findings := [{
 	"severity":   "warning",
 	"pass":       false,
 	"reasonCode": "prod.collector.hugepages.absent",
-	"message":    "hugepages collector data is absent; run 'kvirtbp collect' before scanning",
-	"remediation": "kvirtbp collect --bundle ./examples/collectors/hugepages --output collector-data.json",
+	"message":    "hugepages collector data is absent; run 'kapture collect' before scanning",
+	"remediation": "kapture collect --bundle ./examples/collectors/hugepages --output collector-data.json",
 }] {
 	not collector_data_present
 }

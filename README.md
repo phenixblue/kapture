@@ -1,6 +1,6 @@
-# kvirtbp
+# kapture
 
-`kvirtbp` is a Golang CLI for running production-readiness, security, and availability checks against Kubernetes clusters with KubeVirt.
+`kapture` is a Golang CLI for running production-readiness, security, and availability checks against Kubernetes clusters with KubeVirt.
 
 ## Current status
 
@@ -16,34 +16,34 @@ Milestone 1 foundation is implemented:
 ```bash
 make tidy
 make build
-./bin/kvirtbp version
-./bin/kvirtbp checks
-./bin/kvirtbp scan --output table
-./bin/kvirtbp scan --output json
-./bin/kvirtbp scan --kubeconfig ~/.kube/config --context my-context
-./bin/kvirtbp scan --category production-readiness --severity warning
-./bin/kvirtbp scan --check kubevirt-api-availability --exclude-check bootstrap-placeholder
-./bin/kvirtbp scan --engine rego
-./bin/kvirtbp scan --engine rego --policy-file ./policy/custom.rego
-./bin/kvirtbp scan --engine rego --policy-bundle ./policy/bundle
-./bin/kvirtbp scan --engine rego --policy-bundle ./policy/baseline
-./bin/kvirtbp scan --namespace tenant-a --exclude-namespace tenant-a-shared
-./bin/kvirtbp scan --exclude-namespace "openshift-*" --exclude-namespace "cattle-*"
-./bin/kvirtbp scan --show-runbook --output table
-./bin/kvirtbp runbook
-./bin/kvirtbp runbook --id RUNBOOK-SEC-RBAC-001
+./bin/kapture version
+./bin/kapture checks
+./bin/kapture scan --output table
+./bin/kapture scan --output json
+./bin/kapture scan --kubeconfig ~/.kube/config --context my-context
+./bin/kapture scan --category production-readiness --severity warning
+./bin/kapture scan --check kubevirt-api-availability --exclude-check bootstrap-placeholder
+./bin/kapture scan --engine rego
+./bin/kapture scan --engine rego --policy-file ./policy/custom.rego
+./bin/kapture scan --engine rego --policy-bundle ./policy/bundle
+./bin/kapture scan --engine rego --policy-bundle ./policy/baseline
+./bin/kapture scan --namespace tenant-a --exclude-namespace tenant-a-shared
+./bin/kapture scan --exclude-namespace "openshift-*" --exclude-namespace "cattle-*"
+./bin/kapture scan --show-runbook --output table
+./bin/kapture runbook
+./bin/kapture runbook --id RUNBOOK-SEC-RBAC-001
 
 # Collector workflow — gather node/cluster data then scan with it
-./bin/kvirtbp collect --bundle ./policy/baseline --output collector-data.json
-./bin/kvirtbp collect --collector-config ./my-collectors.json --output collector-data.json
-./bin/kvirtbp scan --engine rego --policy-bundle ./policy/baseline --collector-data collector-data.json
+./bin/kapture collect --bundle ./policy/baseline --output collector-data.json
+./bin/kapture collect --collector-config ./my-collectors.json --output collector-data.json
+./bin/kapture scan --engine rego --policy-bundle ./policy/baseline --collector-data collector-data.json
 
 # Remote bundle (HTTPS tarball)
-./bin/kvirtbp collect --bundle https://github.com/myorg/policies/archive/refs/tags/v1.2.0.tar.gz --output collector-data.json
-./bin/kvirtbp scan --engine rego --policy-bundle https://github.com/myorg/policies/archive/refs/tags/v1.2.0.tar.gz --collector-data collector-data.json
+./bin/kapture collect --bundle https://github.com/myorg/policies/archive/refs/tags/v1.2.0.tar.gz --output collector-data.json
+./bin/kapture scan --engine rego --policy-bundle https://github.com/myorg/policies/archive/refs/tags/v1.2.0.tar.gz --collector-data collector-data.json
 
 # Remote monorepo (bundle lives under a subdirectory)
-./bin/kvirtbp scan --engine rego \
+./bin/kapture scan --engine rego \
   --policy-bundle https://github.com/myorg/policies/archive/refs/tags/v1.2.0.tar.gz \
   --bundle-subdir policy/kubevirt --collector-data collector-data.json
 ```
@@ -54,7 +54,7 @@ Install from the project tap:
 
 ```bash
 brew tap phenixblue/tap
-brew install kvirtbp
+brew install kapture
 ```
 
 Homebrew formula publishing is handled by GoReleaser on version tags (`v*`) via `.github/workflows/release.yml`.
@@ -91,11 +91,11 @@ Release mode comparison:
 
 ## Configuration
 
-Environment variables use the `KVIRTBP_` prefix.
+Environment variables use the `KAPTURE_` prefix.
 
-- `KVIRTBP_OUTPUT` (`table` or `json`, default: `table`)
-- `KVIRTBP_TIMEOUT` (Go duration string, default: `30s`)
-- `KVIRTBP_CONCURRENCY` (default: `4`)
+- `KAPTURE_OUTPUT` (`table` or `json`, default: `table`)
+- `KAPTURE_TIMEOUT` (Go duration string, default: `30s`)
+- `KAPTURE_CONCURRENCY` (default: `4`)
 
 Scan command supports:
 
@@ -105,7 +105,7 @@ Scan command supports:
 - `--namespace` and `--exclude-namespace` to scope namespace-based coverage controls (supports glob patterns like `tenant-*`)
 - `--category` and `--severity` to filter findings
 - `--engine` to select evaluator backend (`go` and `rego`)
-- `--policy-file` to provide a custom Rego policy file with `data.kvirtbp.findings` output
+- `--policy-file` to provide a custom Rego policy file with `data.kapture.findings` output
 - `--policy-bundle` to provide a local directory or HTTPS `.tar.gz` URL of `.rego` files with optional `metadata.json`
 - `--bundle-subdir` to point at a subdirectory within a remote archive (for monorepo layouts)
 - `--show-runbook` to append compact runbook hints for failing findings
@@ -157,7 +157,7 @@ Policy bundle metadata (optional `metadata.json`):
 - `schemaVersion`: currently `v1alpha1`
 - `policyVersion`: informational version for your bundle
 - `minBinaryVersion`: optional minimum CLI version (for example `1.2.0`)
-- `collectors`: optional array of `CollectorConfig` objects that `kvirtbp collect` will run automatically when `--bundle` is provided (see [docs/collectors.md](docs/collectors.md))
+- `collectors`: optional array of `CollectorConfig` objects that `kapture collect` will run automatically when `--bundle` is provided (see [docs/collectors.md](docs/collectors.md))
 
 Checked-in baseline Rego bundle:
 
@@ -188,7 +188,7 @@ The `e2e-kind-pass` and `e2e-kind-fail` targets call `scripts/e2e_kind_scan.sh` 
 
 1. create a kind cluster profile
 2. install/configure KubeVirt
-3. run `kvirtbp scan` against that cluster
+3. run `kapture scan` against that cluster
 
 Behavior:
 

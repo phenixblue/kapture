@@ -9,13 +9,13 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/phenixblue/kvirtbp/internal/kube"
+	"github.com/phenixblue/kapture/internal/kube"
 )
 
 // rbacResourceName returns the shared name for the ServiceAccount, ClusterRole,
 // and ClusterRoleBinding that the framework creates for a collector.
 func rbacResourceName(collectorName string) string {
-	return "kvirtbp-" + sanitizeName(collectorName)
+	return "kapture-" + sanitizeName(collectorName)
 }
 
 // ensureCollectorRBAC creates (or no-ops when already present) the

@@ -3,7 +3,7 @@
         "go": true,
         "gofmt": true,
         "make": true,
-        "./bin/kvirtbp": true,
+        "./bin/kapture": true,
         "git rm": true,
         "true": true,
         "goreleaser": true,

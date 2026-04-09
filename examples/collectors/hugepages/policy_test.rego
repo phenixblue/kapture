@@ -1,4 +1,4 @@
-package kvirtbp_test
+package kapture_test
 
 import rego.v1
 
@@ -69,7 +69,7 @@ input_no_cluster := {}
 # ---------------------------------------------------------------------------
 
 test_no_cluster_findings_empty if {
-	findings := data.kvirtbp.findings with input as input_no_cluster
+	findings := data.kapture.findings with input as input_no_cluster
 	count(findings) == 0
 }
 
@@ -78,7 +78,7 @@ test_no_cluster_findings_empty if {
 # ---------------------------------------------------------------------------
 
 test_collector_present_pass if {
-	findings := data.kvirtbp.findings with input as input_all_configured
+	findings := data.kapture.findings with input as input_all_configured
 	present := [f | f := findings[_]; f.checkId == "prod-hugepages-collector-present"]
 	count(present) == 1
 	present[0].pass == true
@@ -86,7 +86,7 @@ test_collector_present_pass if {
 }
 
 test_collector_absent_fail if {
-	findings := data.kvirtbp.findings with input as input_no_collectors
+	findings := data.kapture.findings with input as input_no_collectors
 	present := [f | f := findings[_]; f.checkId == "prod-hugepages-collector-present"]
 	count(present) == 1
 	present[0].pass == false
@@ -98,7 +98,7 @@ test_collector_absent_fail if {
 # ---------------------------------------------------------------------------
 
 test_all_configured_pass if {
-	findings := data.kvirtbp.findings with input as input_all_configured
+	findings := data.kapture.findings with input as input_all_configured
 	hp := [f | f := findings[_]; f.checkId == "prod-hugepages-configured"]
 	count(hp) == 1
 	hp[0].pass == true
@@ -106,7 +106,7 @@ test_all_configured_pass if {
 }
 
 test_partial_configured_fail if {
-	findings := data.kvirtbp.findings with input as input_partial
+	findings := data.kapture.findings with input as input_partial
 	hp := [f | f := findings[_]; f.checkId == "prod-hugepages-configured"]
 	count(hp) == 1
 	hp[0].pass == false
@@ -114,7 +114,7 @@ test_partial_configured_fail if {
 }
 
 test_none_configured_fail if {
-	findings := data.kvirtbp.findings with input as input_none_configured
+	findings := data.kapture.findings with input as input_none_configured
 	hp := [f | f := findings[_]; f.checkId == "prod-hugepages-configured"]
 	count(hp) == 1
 	hp[0].pass == false
@@ -126,7 +126,7 @@ test_none_configured_fail if {
 # ---------------------------------------------------------------------------
 
 test_no_collector_hugepages_check_skipped if {
-	findings := data.kvirtbp.findings with input as input_no_collectors
+	findings := data.kapture.findings with input as input_no_collectors
 	hp := [f | f := findings[_]; f.checkId == "prod-hugepages-configured"]
 	count(hp) == 0
 }

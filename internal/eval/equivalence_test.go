@@ -6,10 +6,10 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/phenixblue/kvirtbp/internal/checks"
-	"github.com/phenixblue/kvirtbp/internal/eval"
-	"github.com/phenixblue/kvirtbp/internal/eval/goeval"
-	regoengine "github.com/phenixblue/kvirtbp/internal/eval/rego"
+	"github.com/phenixblue/kapture/internal/checks"
+	"github.com/phenixblue/kapture/internal/eval"
+	"github.com/phenixblue/kapture/internal/eval/goeval"
+	regoengine "github.com/phenixblue/kapture/internal/eval/rego"
 )
 
 type equivalenceCheck struct {
@@ -32,7 +32,7 @@ func TestGoAndRegoEquivalentFindings(t *testing.T) {
 		equivalenceCheck{meta: checks.Metadata{ID: "avail-baseline-workload-resilience", Title: "Availability Baseline: Workload Resilience", Category: "availability", Severity: checks.SeverityInfo}},
 	}
 
-	regoPolicy := `package kvirtbp
+	regoPolicy := `package kapture
 
 findings := [finding |
 	check := input.checks[_]

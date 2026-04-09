@@ -1,4 +1,4 @@
-package kvirtbp
+package kapture
 
 allowed_categories := {
 	"production-readiness",
@@ -857,7 +857,7 @@ all_permission_findings := array.concat(
 )
 
 # ---------------------------------------------------------------------------
-# Required entrypoint: data.kvirtbp.findings
+# Required entrypoint: data.kapture.findings
 # ---------------------------------------------------------------------------
 
 # cluster_findings is the exported entrypoint for this module.

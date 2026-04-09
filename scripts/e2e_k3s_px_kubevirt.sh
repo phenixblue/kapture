@@ -13,12 +13,12 @@ set -euo pipefail
 #
 # The resulting cluster can be used to run the portworx-kubevirt collector:
 #
-#   kvirtbp collect \
+#   kapture collect \
 #     --bundle ./examples/collectors/portworx-kubevirt \
-#     --namespace kvirtbp-collectors \
+#     --namespace kapture-collectors \
 #     --output px-data.json
 #
-#   kvirtbp scan --engine rego \
+#   kapture scan --engine rego \
 #     --policy-bundle ./examples/collectors/portworx-kubevirt \
 #     --collector-data px-data.json
 #
@@ -56,7 +56,7 @@ set -euo pipefail
 #
 # Tunable environment variables (all have defaults)
 # -------------------------------------------------
-#   CLUSTER_NAME            k3d cluster name            (kvirtbp-k3s-kubevirt)
+#   CLUSTER_NAME            k3d cluster name            (kapture-k3s-kubevirt)
 #   K3D_CONFIG              path to k3d cluster YAML    (scripts/k3d/px-kubevirt.yaml)
 #   K3S_IMAGE               k3s container image         (rancher/k3s:v1.28.8-k3s1)
 #   PX_VERSION              Portworx version            (3.1.3)
@@ -67,12 +67,12 @@ set -euo pipefail
 #   KUBEVIRT_TIMEOUT        KubeVirt readiness deadline (20m)
 #   RECREATE_CLUSTER        delete+recreate if present  (true)
 #   DISK_SIZE_GB            loop-disk size per worker   (20)
-#   VM_NAMESPACE            namespace for test VMs      (kvirtbp-px-vms)
+#   VM_NAMESPACE            namespace for test VMs      (kapture-px-vms)
 #   UNTAINT_CONTROL_PLANE   remove control-plane taint  (true)
 
 require_cmd() {
   if ! command -v "$1" >/dev/null 2>&1; then
-    echo "[kvirtbp-k3s-lab] missing required command: $1"
+    echo "[kapture-k3s-lab] missing required command: $1"
     exit 127
   fi
 }
@@ -88,15 +88,15 @@ require_cmd docker
 # hitting an opaque Rosetta ELF error.
 HOST_ARCH="$(uname -m)"
 if [[ "$HOST_ARCH" != "x86_64" ]]; then
-  echo "[kvirtbp-k3s-lab] ERROR: Portworx Enterprise requires an x86_64 host."
-  echo "[kvirtbp-k3s-lab]   Detected architecture: ${HOST_ARCH}"
-  echo "[kvirtbp-k3s-lab]   px-runc is an x86_64 ELF binary; it cannot run on ${HOST_ARCH}."
-  echo "[kvirtbp-k3s-lab]   Run this script on an x86_64 Linux host or cloud VM."
+  echo "[kapture-k3s-lab] ERROR: Portworx Enterprise requires an x86_64 host."
+  echo "[kapture-k3s-lab]   Detected architecture: ${HOST_ARCH}"
+  echo "[kapture-k3s-lab]   px-runc is an x86_64 ELF binary; it cannot run on ${HOST_ARCH}."
+  echo "[kapture-k3s-lab]   Run this script on an x86_64 Linux host or cloud VM."
   exit 1
 fi
 
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
-CLUSTER_NAME="${CLUSTER_NAME:-kvirtbp-k3s-kubevirt}"
+CLUSTER_NAME="${CLUSTER_NAME:-kapture-k3s-kubevirt}"
 K3D_CONFIG="${K3D_CONFIG:-$ROOT_DIR/scripts/k3d/px-kubevirt.yaml}"
 K3S_IMAGE="${K3S_IMAGE:-rancher/k3s:v1.28.8-k3s1}"
 PX_VERSION="${PX_VERSION:-3.1.3}"
@@ -112,14 +112,14 @@ KUBEVIRT_VERSION="${KUBEVIRT_VERSION:-v1.2.2}"
 KUBEVIRT_TIMEOUT="${KUBEVIRT_TIMEOUT:-20m}"
 RECREATE_CLUSTER="${RECREATE_CLUSTER:-true}"
 DISK_SIZE_GB="${DISK_SIZE_GB:-20}"
-VM_NAMESPACE="${VM_NAMESPACE:-kvirtbp-px-vms}"
+VM_NAMESPACE="${VM_NAMESPACE:-kapture-px-vms}"
 UNTAINT_CONTROL_PLANE="${UNTAINT_CONTROL_PLANE:-true}"
 
 # k3d sets the kubectl context name to k3d-{cluster-name}
 KUBE_CONTEXT="k3d-${CLUSTER_NAME}"
 
 log() {
-  echo "[kvirtbp-k3s-lab] $*"
+  echo "[kapture-k3s-lab] $*"
 }
 
 # deadline_seconds converts a duration string like "30m" or "20m" into seconds.
@@ -556,12 +556,12 @@ done
 VM_IMAGE="${VM_IMAGE:-quay.io/kubevirt/cirros-container-disk-demo:latest}"
 
 for i in 1 2; do
-  log "Creating VirtualMachine: kvirtbp-vm-${i}"
+  log "Creating VirtualMachine: kapture-vm-${i}"
   cat <<EOF | kubectl --context "$KUBE_CONTEXT" apply -f -
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
-  name: kvirtbp-vm-${i}
+  name: kapture-vm-${i}
   namespace: ${VM_NAMESPACE}
   labels:
     portworx.io/app: kubevirt
@@ -570,7 +570,7 @@ spec:
   template:
     metadata:
       labels:
-        kubevirt.io/domain: kvirtbp-vm-${i}
+        kubevirt.io/domain: kapture-vm-${i}
         portworx.io/app: kubevirt
     spec:
       domain:
@@ -649,8 +649,8 @@ log "  Portworx nodes:"
 kubectl --context "$KUBE_CONTEXT" -n "$PX_NAMESPACE" get storagenodes -o wide 2>/dev/null || true
 log ""
 log "To run the portworx-kubevirt collector against this cluster:"
-log "  kvirtbp collect \\"
+log "  kapture collect \\"
 log "    --bundle ./examples/collectors/portworx-kubevirt \\"
-log "    --namespace kvirtbp-collectors \\"
+log "    --namespace kapture-collectors \\"
 log "    --context ${KUBE_CONTEXT} \\"
 log "    --output px-data.json"

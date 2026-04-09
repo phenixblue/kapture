@@ -1,4 +1,4 @@
-package kvirtbp_test
+package kapture_test
 
 import rego.v1
 
@@ -53,7 +53,7 @@ input_no_cluster := {}
 # ---------------------------------------------------------------------------
 
 test_no_cluster_findings_empty if {
-	findings := data.kvirtbp.findings with input as input_no_cluster
+	findings := data.kapture.findings with input as input_no_cluster
 	count(findings) == 0
 }
 
@@ -62,7 +62,7 @@ test_no_cluster_findings_empty if {
 # ---------------------------------------------------------------------------
 
 test_collector_present_pass if {
-	findings := data.kvirtbp.findings with input as input_with_data
+	findings := data.kapture.findings with input as input_with_data
 	present_findings := [f | f := findings[_]; f.checkId == "prod-node-info-collector-present"]
 	count(present_findings) == 1
 	present_findings[0].pass == true
@@ -70,7 +70,7 @@ test_collector_present_pass if {
 }
 
 test_collector_absent_fail if {
-	findings := data.kvirtbp.findings with input as input_no_collectors
+	findings := data.kapture.findings with input as input_no_collectors
 	present_findings := [f | f := findings[_]; f.checkId == "prod-node-info-collector-present"]
 	count(present_findings) == 1
 	present_findings[0].pass == false
@@ -82,7 +82,7 @@ test_collector_absent_fail if {
 # ---------------------------------------------------------------------------
 
 test_arch_consistent_pass if {
-	findings := data.kvirtbp.findings with input as input_with_data
+	findings := data.kapture.findings with input as input_with_data
 	arch_findings := [f | f := findings[_]; f.checkId == "prod-node-arch-consistent"]
 	count(arch_findings) == 1
 	arch_findings[0].pass == true
@@ -91,7 +91,7 @@ test_arch_consistent_pass if {
 }
 
 test_arch_mixed_fail if {
-	findings := data.kvirtbp.findings with input as input_mixed_arch
+	findings := data.kapture.findings with input as input_mixed_arch
 	arch_findings := [f | f := findings[_]; f.checkId == "prod-node-arch-consistent"]
 	count(arch_findings) == 1
 	arch_findings[0].pass == false
@@ -103,7 +103,7 @@ test_arch_mixed_fail if {
 # ---------------------------------------------------------------------------
 
 test_no_collector_arch_check_skipped if {
-	findings := data.kvirtbp.findings with input as input_no_collectors
+	findings := data.kapture.findings with input as input_no_collectors
 	arch_findings := [f | f := findings[_]; f.checkId == "prod-node-arch-consistent"]
 	count(arch_findings) == 0
 }

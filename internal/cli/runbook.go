@@ -3,7 +3,7 @@ package cli
 import (
 	"fmt"
 
-	"github.com/phenixblue/kvirtbp/internal/runbook"
+	"github.com/phenixblue/kapture/internal/runbook"
 	"github.com/spf13/cobra"
 )
 
